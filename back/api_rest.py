@@ -1,5 +1,6 @@
 from flask import Flask,jsonify,request
 import mysql.connector
+import os
 
 app = Flask(__name__)
 
@@ -8,26 +9,27 @@ def test():
     return 'pong!'
 
 # ----------------------------------------------------------------------------------------
-@app.route("/mnsg",methods=["POST"])
-def send_mnsg():
-    sended_mnsg = request.json["mnsg"]
-
+@app.route("/msg",methods=["POST"])
+def send_msg():
+    sended_msg = request.json["msg"]
+    print(sended_msg)
+    
     # Conectar a la base de datos
     conexion = mysql.connector.connect(
-        host="juanito.mysql.pythonanywhere-services.com",
-        user="juanito",
+        host="localhost",
+        user="root",
         password="J1234567890j",
-        database="pruebas"
+        database="school_stage_project"
     )
-    return sended_mnsg
+    
 
+    
     # Crear un cursor
     cursor = conexion.cursor()
 
     # Ejecutar una consulta SQL
-    return sended_mnsg
-    cursor.execute(f"INSERT INTO mnsgs(mnsg)VALUES({sended_mnsg})")
-    return sended_mnsg
+    # cursor.execute(f"INSERT INTO messages(msg)VALUES({sended_msg})")
+    cursor.execute(f"INSERT INTO messages(msg)VALUES('{sended_msg}')")
     # return jsonify({"msg":"an img*"})
 
     # Cerrar la conexión
@@ -35,21 +37,25 @@ def send_mnsg():
 
     return "done"
 
-@app.route("/mnsg")
+@app.route("/msg")
 def show_msng():
+    os.system("cls")
+    
     conexion = mysql.connector.connect(
-        host="juanito.mysql.pythonanywhere-services.com",
-        user="juanito",
+        host="localhost",
+        user="root",
         password="J1234567890j",
-        database="pruebas"
-    );cursor = conexion.cursor()
+        database="school_stage_project"
+    );
+    cursor = conexion.cursor()
 
-    data = cursor.execute("""
-    SELECT * FROM mnsgs
-    """)
+    data = cursor.execute("SELECT * FROM messages;")
 
-
-    return data.fetchall()
+    print("~"*100)
+    print(data)
+    print("~"*100)
+    # print(data.fetchall())
+    return "done with get"
 # ----------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
