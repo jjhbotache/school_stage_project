@@ -6,17 +6,31 @@
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+  <link rel="stylesheet" href="styles.css">
   <!-- Bootstrap CSS v5.2.1 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
 
 </head>
 
-<body>
+<body class="d-flex justify-content-center">
+  <main class="p-3 d-flex flex-column justify-content-center">
+    <div class="mb-3">
+      <label id="label" for="" class="mb-3 form-label">add a msg</label>
+      <input type="text"class="mb-3 form-control" name="" id="input" aria-describedby="helpId" placeholder="">
 
-  <h1>holam</h1>
-  <input name="btn" id="btn" class="btn btn-primary" type="button" value="Button">
+      <button id="save" type="button" class="mb-3 btn btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off">send</button>
+
+      <button id="get" type="button" class="mb-3 btn btn-info" data-bs-toggle="button" aria-pressed="false" autocomplete="off">get msgs</button>
+
+      <ul id="msg-container">
+
+      </ul>
+
+      
+
+    </div>
+  </main>
 
   <!-- Bootstrap JavaScript Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
@@ -26,6 +40,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
     integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous">
   </script>
+
+  <script src="main.js"></script>
+
 </body>
 
 </html>

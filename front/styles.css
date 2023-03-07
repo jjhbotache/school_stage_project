@@ -1,0 +1,13 @@
+body{
+  height: 1000vh;
+}
+main{
+  max-width: 80vh;
+  max-height: 95vh;
+}
+li{
+  list-style: none;
+}
+#msg{
+  color: aquamarine;
+}

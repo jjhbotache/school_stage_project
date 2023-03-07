@@ -1,61 +1,69 @@
 from flask import Flask,jsonify,request
-import mysql.connector
+import pymysql
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 
-@app.route('/ping')
+CORS(app)
+
+@app.route('/')
 def test():
-    return 'pong!'
+    return '<h1>holam</h1>'
+
+
+class Data_base:
+    def __init__(self):
+        self.connection = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="J1234567890j",
+            database="school_stage_project"  
+        )
+        self.cursor = self.connection.cursor()
+    
+    def get_msgs(self):
+        data = self.cursor.execute(f"""
+                                    SELECT * FROM messages
+                                    """)
+        
+        return self.cursor.fetchall()
+    
+    def insert_msg(self,msg):
+        self.cursor.execute(f"""
+                            INSERT INTO messages(msg)
+                            VALUES("{msg}")
+                            """)
+        # self.connection.commit()
+
+    def delete_msg(self,id):
+        self.cursor.execute(f"""
+                            DELETE FROM messages
+                            WHERE id = {id}
+                            """)
+
 
 # ----------------------------------------------------------------------------------------
 @app.route("/msg",methods=["POST"])
 def send_msg():
+    os.system("cls")
     sended_msg = request.json["msg"]
-    print(sended_msg)
-    
-    # Conectar a la base de datos
-    conexion = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="J1234567890j",
-        database="school_stage_project"
-    )
-    
-
-    
-    # Crear un cursor
-    cursor = conexion.cursor()
-
-    # Ejecutar una consulta SQL
-    # cursor.execute(f"INSERT INTO messages(msg)VALUES({sended_msg})")
-    cursor.execute(f"INSERT INTO messages(msg)VALUES('{sended_msg}')")
-    # return jsonify({"msg":"an img*"})
-
-    # Cerrar la conexión
-    conexion.close()
-
+    db=Data_base()
+    db.insert_msg(sended_msg)
+    print(db.get_msgs())
     return "done"
 
 @app.route("/msg")
 def show_msng():
-    os.system("cls")
+    db = Data_base() #connect
+    os.system("cls") #clean console
+
+    print("~"*100)
     
-    conexion = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="J1234567890j",
-        database="school_stage_project"
-    );
-    cursor = conexion.cursor()
-
-    data = cursor.execute("SELECT * FROM messages;")
-
+    data = db.get_msgs() #getting the data
+    print(data)     
     print("~"*100)
-    print(data)
-    print("~"*100)
-    # print(data.fetchall())
-    return "done with get"
+    return jsonify(data)    #return the data
 # ----------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
