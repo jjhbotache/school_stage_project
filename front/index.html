@@ -16,20 +16,26 @@
 <body class="d-flex justify-content-center">
   <main class="p-3 d-flex flex-column justify-content-center">
     <div class="mb-3">
-      <label id="label" for="" class="mb-3 form-label">add a msg</label>
+      <label  abel id="label" for="" class="mb-3 form-label">Add or modify a message</label>
       <input type="text"class="mb-3 form-control" name="" id="input" aria-describedby="helpId" placeholder="">
 
-      <button id="save" type="button" class="mb-3 btn btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off">send</button>
+      <button id="saveBtn" type="button" class="mb-3 btn btn-primary" >send</button>
+      <button id="getBtn" type="button" class="mb-3 btn btn-info" >get msgs</button>
+    </div>
 
-      <button id="get" type="button" class="mb-3 btn btn-info" data-bs-toggle="button" aria-pressed="false" autocomplete="off">get msgs</button>
+    <select class="form-select form-select-lg" name="" id="delete">
+      <option selected>Select one</option>
+    </select>
+    <button type="button" class="btn btn-outline-danger mt-2" id="deleteBtn">delete</button>
+    <button type="button" class="btn btn-outline-success mt-2" id="updateBtn">modify</button>
+    
+        
 
-      <ul id="msg-container">
-
+      <ul id="msg-container" class="mt-2">
       </ul>
 
       
 
-    </div>
   </main>
 
   <!-- Bootstrap JavaScript Libraries -->

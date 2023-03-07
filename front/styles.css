@@ -1,5 +1,5 @@
 body{
-  height: 1000vh;
+  height: 100vh;
 }
 main{
   max-width: 80vh;
@@ -8,6 +8,12 @@ main{
 li{
   list-style: none;
 }
+
 #msg{
   color: aquamarine;
+}
+#msg-container{
+  height: 50vh;
+  overflow-y: scroll;
+  background: #003d4e !important;
 }

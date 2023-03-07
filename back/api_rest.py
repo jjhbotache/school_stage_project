@@ -34,25 +34,26 @@ class Data_base:
                             INSERT INTO messages(msg)
                             VALUES("{msg}")
                             """)
-        # self.connection.commit()
+        self.connection.commit()
 
     def delete_msg(self,id):
         self.cursor.execute(f"""
                             DELETE FROM messages
                             WHERE id = {id}
                             """)
+        self.connection.commit()
+        
+    def update_msg(self,id,msg):
+        self.cursor.execute(f"""
+                            UPDATE messages
+                            SET msg = "{msg}"
+                            WHERE id = {id}
+                            """)
+        self.connection.commit()
+        
 
 
 # ----------------------------------------------------------------------------------------
-@app.route("/msg",methods=["POST"])
-def send_msg():
-    os.system("cls")
-    sended_msg = request.json["msg"]
-    db=Data_base()
-    db.insert_msg(sended_msg)
-    print(db.get_msgs())
-    return "done"
-
 @app.route("/msg")
 def show_msng():
     db = Data_base() #connect
@@ -64,6 +65,33 @@ def show_msng():
     print(data)     
     print("~"*100)
     return jsonify(data)    #return the data
+
+@app.route("/msg",methods=["POST"])
+def send_msg():
+    os.system("cls")
+    sended_msg = request.json["msg"]
+    db=Data_base()
+    db.insert_msg(sended_msg)
+    print(db.get_msgs())
+    return "done"
+
+@app.route("/msg/<int:id>",methods=["DELETE"])
+def delete_msg(id):
+    os.system("cls")
+    db=Data_base()
+    db.delete_msg(id)
+    print(db.get_msgs())
+    return "done"
+
+@app.route("/msg/<int:id>",methods=["PUT"])
+def update_msg(id):
+    os.system("cls")
+    sended_msg = request.json["msg"]
+    db=Data_base()
+    db.update_msg(id,sended_msg)
+    print(db.get_msgs())
+    return "done"
+
 # ----------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
