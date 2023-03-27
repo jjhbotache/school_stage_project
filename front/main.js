@@ -1,16 +1,13 @@
-const btnSave = document.getElementById("saveBtn");
-const btnGet = document.getElementById("getBtn");
-const btnDelete = document.getElementById("deleteBtn");
-const btnUpdate = document.getElementById("updateBtn");
-const input = document.getElementById("input");
+const btnSave = document.getElementById("btn-save");
+const inputName = document.getElementById("input-name");
+const inputImg = document.getElementById("input-img");
+const inputAi= document.getElementById("input-ai");
 const preview = document.getElementById("preview")
-const input_img = document.getElementById("input-img");
-const label = document.getElementById("label");
-const select = document.getElementById("delete");
+const realName = document.getElementById("real-name");
 
 
-let templateContent;
 // import & create template
+let templateContent;
 fetch("templates/msg.html")
 .then(response=>response.text())
 .then(text=>{
@@ -24,134 +21,78 @@ fetch("templates/msg.html")
   // agregamos el elemento al documento
   document.body.appendChild(template);
   // redefinimos a templatecontent como el contenido del template
-});
+})
+.catch(error=>{
+  console.log(error);
+})
 
-const msgContainer = document.getElementById("msg-container");
-let msgs = [
-  // [0,"hola"],
-  // [1,"adios"],
-  // [3,"como estas?"]
-];
 
-function getMsgs() {
-  msgContainer.innerHTML=""
+
+function sendDesign(name,img,ai) {
+  const data = new FormData();
+  data.append('name', name);
+  data.append('img', img);
+  data.append('ai', ai);
+
+  console.log(`sending=`,data);  
   fetch(
-    "http://localhost:1000/msg"
-  )
-  .then(response => response.json())
-  .then(data => {
-    
-    const src = data["src"];
-    console.log(`src`, src);
-    preview.src=src;
-    
-    // msgs.forEach(msg => {
-    //   select.innerHTML+=`
-    //   <option value="${msg[0]}">${msg[1]}</option>
-    //   `;
-    // });
-    // renderMsgs();
-  })
-}
-
-function sendMsg(message,callback) {
-  const obj = new FormData();
-  obj.append('msg', message);
-  obj.append('img', input_img.files[0]);
-
-  console.log(`sending=`,obj);  
-  fetch(
-    "http://localhost:1000/msg",
+    "http://localhost:1000/design",
     {
       method:"POST",
-      // headers: {
-      //   'Content-Type': 'multipart/form-data'
-      // },
-      body:obj
+      body:data
     }
   )
   .then(respuesta=>respuesta.text())
   .then(data=>{
-    // callback();
     alert(data);
   })
   .catch(e=>{
     alert("somethig went wrong:",e);
   })
 }
-function deleteMsg(id,callback) {
-  console.log(`sending msg with id: ${id}`);
-  fetch(
-    `http://localhost:1000/msg/${id}`,
-    {
-      method:"DELETE",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    }
-  )
-  .then(respuesta=>respuesta.text())
-  .then(data=>{
-      callback();
-      alert(data);
-    })
-  .catch(e=>{
-    alert("somethig went wrong");
-  })
-}
-function updateMsg(id,message,callback) {
-  console.log(`replace the msg with id: ${id} \n with the msg: `);
-  obj = {msg:message};
-  fetch(
-    `http://localhost:1000/msg/${id}`,
-    {
-      method:"PUT",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body:JSON.stringify(obj)
-    }
-  )
-  .then(respuesta=>respuesta.text())
-  .then(data=>{
-      callback();
-      alert(data);
-    })
-  .catch(e=>{
-    alert("somethig went wrong");
-  })
-  
-}
 
-btnGet.addEventListener("click",()=>{    getMsgs()                           ;})
-btnSave.addEventListener("click",()=>{   sendMsg(input.value,getMsgs)                ;})
-btnDelete.addEventListener("click",()=>{ deleteMsg(select.value,getMsgs)             ;})
-btnUpdate.addEventListener("click",()=>{ updateMsg(select.value,input.value,getMsgs) ;})
-
-
-input_img.addEventListener("input",()=>{
-  const name = input_img.files[0].name;
-  input.value = name.split("-").join("_");
+btnSave.addEventListener("click",()=>{
+  if (inputName.value==""){
+    alert("Please enter a name");
+  }else if (inputImg.files[0].lenght>0) {
+    alert("Please enter an Img");
+  }else if (inputAi.files[0].lenght>0) {
+    alert("Please enter an Ai");
+  }else{
+    sendDesign(inputName.value, inputImg.files[0], inputAi.files[0]);
+  }
 })
 
+function updateRealName(str) {
+  str = str||inputName.value;
+  if (str=="") {
+    alert("Please enter a name");
+  }else{
+    realName.textContent = addExtension( str.toString().replace(" ", "_") );
+  }
+  
+}
+function addExtension(str) {
+  const allowedExtensions = [".png", ".jpg", ".jpeg"];
+  let hasExtension = false;
 
+  for (var i = 0; i < allowedExtensions.length; i++) {
+    if (str.indexOf(allowedExtensions[i]) !== -1) {
+      hasExtension = true;
+      break;
+    }
+  }
 
+  if (!hasExtension) {
+    str += ".png";
+  }
 
-function renderMsgs() {
-  msgs.forEach(msg => {
-    console.log(msg);
-    // creo un nuevo objeto, a partir del contenido del template
-    const newMsg = document.importNode(
-      document.getElementById("msg-template").content,
-      true);
-      
-      // modifico el nuevo obj
-      newMsg.getElementById("msg").textContent = msg[1];
-      
-      // lo anexo a un contenedor
-      msgContainer.appendChild(newMsg);
-  });
+  return str;
 }
 
-
+inputName.addEventListener("blur",()=>{updateRealName();});
+inputImg.addEventListener('change',()=>{
+  inputName.value = inputImg.files[0].name;
+  updateRealName();
+});
 

@@ -17,3 +17,7 @@ li{
   overflow-y: scroll;
   background: #003d4e !important;
 }
+
+#real-name,#input-name{
+  font-size: 0.5em;
+}

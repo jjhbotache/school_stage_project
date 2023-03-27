@@ -1,10 +1,12 @@
 from flask import Flask,jsonify,request,send_file
 import pymysql
 import os
+import re
 from flask_cors import CORS
 app = Flask(__name__)
-
 CORS(app)
+
+rgx = re.compile(r'^[\w\-.]+$')
 
 @app.route('/')
 def test():
@@ -21,88 +23,83 @@ class Data_base:
         )
         self.cursor = self.connection.cursor()
     
-    def get_msgs(self):
-        self.cursor.execute(f"""
-                            SELECT name,png FROM designs
-                            """)
+    # def get_msgs(self):
+    #     self.cursor.execute(f"""
+    #                         SELECT name,png FROM designs
+    #                         """)
         
-        return self.cursor.fetchall()
+    #     return self.cursor.fetchall()
     
-    def insert_design(self,msg,img_dir):
-        self.cursor.execute(f"""
-                            INSERT INTO designs(name,png)
-                            VALUES(
-                                "{msg}",
-                                "{img_dir}"
-                                )
-                            """)
-        self.connection.commit()
+    # def insert_design(self,msg,img_dir):
+    #     self.cursor.execute(f"""
+    #                         INSERT INTO designs(name,png)
+    #                         VALUES(
+    #                             "{msg}",
+    #                             "{img_dir}"
+    #                             )
+    #                         """)
+    #     self.connection.commit()
 
-    def delete_msg(self,id):
+    # def delete_msg(self,id):
+    #     self.cursor.execute(f"""
+    #                         DELETE FROM messages
+    #                         WHERE id = {id}
+    #                         """)
+    #     self.connection.commit()
+        
+    # def update_msg(self,id,msg):
+        # self.cursor.execute(f"""
+        #                     UPDATE messages
+        #                     SET msg = "{msg}"
+        #                     WHERE id = {id}
+        #                     """)
+        # self.connection.commit()
+        
+    def save_design(self,name,img_route,ai_route):
         self.cursor.execute(f"""
-                            DELETE FROM messages
-                            WHERE id = {id}
+                            INSERT INTO designs(name,png,ai)
+                            VALUES(
+                                "{name}",
+                                "{img_route}",
+                                "{ai_route}"
+                            )
                             """)
         self.connection.commit()
-        
-    def update_msg(self,id,msg):
-        self.cursor.execute(f"""
-                            UPDATE messages
-                            SET msg = "{msg}"
-                            WHERE id = {id}
-                            """)
-        self.connection.commit()
-        
 
 
 # ----------------------------------------------------------------------------------------
-@app.route("/msg")
-def show_msng():
-    os.system("cls") #clean console
-    db = Data_base() #connect
-    data = db.get_msgs() #getting the data
-    to_send = {
-        "src":f"http://localhost:1000/img/{data[0][0]}"
-    }
-        
-    return jsonify(to_send)    #return the data
-
-@app.route("/img/<string:name>")
-def get_img(name):
-    return send_file(f"imgs/Que_tu_niña_interior_viva_orgullosa_del_mujeron_que_eres.png", mimetype='image/png')
-
-@app.route("/msg",methods=["POST"])
-def send_msg():
-    os.system("cls")
-    msg = request.form["msg"]
-    print("~"*50)
-    print(msg)
-    print("~"*50)
+@app.route("/design", methods=["POST"])
+def save_img():
+    name = request.form["name"]
     img = request.files["img"]
-    route = "imgs/"+msg
-    img.save(route)
+    ai = request.files["ai"]
+
+    if not rgx.match(name):
+        return f"file with name {name} is unvalid"
     
+    route_img = f"img/{name}"
+    route_ai = f"ai/{name}"
 
-    db=Data_base()
-    db.insert_design(msg,route)
-    return f"saved in {route}"
+    # if os.path.isfile(route_ai) or os.path.isfile(route_img):
+    #     return f"file with name {name} already exist"
+    # else:
+    try:
+        img.save(route_img)
+        ai.save(route_ai)
+        connection = Data_base()
+        connection.save_design(
+            name,
+            route_img,
+            route_ai
+        )
+        return "Saved succesfully"
+    except Exception as e:
+        return f"Something went wrong {e}"
 
-@app.route("/msg/<int:id>",methods=["DELETE"])
-def delete_msg(id):
-    os.system("cls")
-    db=Data_base()
-    db.delete_msg(id)
-    print(db.get_msgs())
-    return "done"
+# @app.route("/img/<string:name>")
+# def get_img(name):
+#     return send_file(f"imgs/Que_tu_niña_interior_viva_orgullosa_del_mujeron_que_eres.png", mimetype='image/png')
 
-@app.route("/msg/<int:id>",methods=["PUT"])
-def update_msg(id):
-    os.system("cls")
-    sended_msg = request.json["msg"]
-    db=Data_base()
-    db.update_msg(id,sended_msg)
-    print(db.get_msgs())
-    return "done"
 
 # ----------------------------------------------------------------------------------------
 
