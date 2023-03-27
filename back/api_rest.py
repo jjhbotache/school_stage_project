@@ -1,8 +1,7 @@
-from flask import Flask,jsonify,request
+from flask import Flask,jsonify,request,send_file
 import pymysql
 import os
 from flask_cors import CORS
-
 app = Flask(__name__)
 
 CORS(app)
@@ -23,16 +22,19 @@ class Data_base:
         self.cursor = self.connection.cursor()
     
     def get_msgs(self):
-        data = self.cursor.execute(f"""
-                                    SELECT * FROM messages
-                                    """)
+        self.cursor.execute(f"""
+                            SELECT name,png FROM designs
+                            """)
         
         return self.cursor.fetchall()
     
-    def insert_msg(self,msg):
+    def insert_design(self,msg,img_dir):
         self.cursor.execute(f"""
-                            INSERT INTO messages(msg)
-                            VALUES("{msg}")
+                            INSERT INTO designs(name,png)
+                            VALUES(
+                                "{msg}",
+                                "{img_dir}"
+                                )
                             """)
         self.connection.commit()
 
@@ -56,24 +58,34 @@ class Data_base:
 # ----------------------------------------------------------------------------------------
 @app.route("/msg")
 def show_msng():
-    db = Data_base() #connect
     os.system("cls") #clean console
-
-    print("~"*100)
-    
+    db = Data_base() #connect
     data = db.get_msgs() #getting the data
-    print(data)     
-    print("~"*100)
-    return jsonify(data)    #return the data
+    to_send = {
+        "src":f"http://localhost:1000/img/{data[0][0]}"
+    }
+        
+    return jsonify(to_send)    #return the data
+
+@app.route("/img/<string:name>")
+def get_img(name):
+    return send_file(f"imgs/Que_tu_niña_interior_viva_orgullosa_del_mujeron_que_eres.png", mimetype='image/png')
 
 @app.route("/msg",methods=["POST"])
 def send_msg():
     os.system("cls")
-    sended_msg = request.json["msg"]
+    msg = request.form["msg"]
+    print("~"*50)
+    print(msg)
+    print("~"*50)
+    img = request.files["img"]
+    route = "imgs/"+msg
+    img.save(route)
+    
+
     db=Data_base()
-    db.insert_msg(sended_msg)
-    print(db.get_msgs())
-    return "done"
+    db.insert_design(msg,route)
+    return f"saved in {route}"
 
 @app.route("/msg/<int:id>",methods=["DELETE"])
 def delete_msg(id):

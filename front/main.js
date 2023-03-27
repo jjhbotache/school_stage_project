@@ -3,8 +3,11 @@ const btnGet = document.getElementById("getBtn");
 const btnDelete = document.getElementById("deleteBtn");
 const btnUpdate = document.getElementById("updateBtn");
 const input = document.getElementById("input");
+const preview = document.getElementById("preview")
+const input_img = document.getElementById("input-img");
 const label = document.getElementById("label");
 const select = document.getElementById("delete");
+
 
 let templateContent;
 // import & create template
@@ -37,38 +40,43 @@ function getMsgs() {
   )
   .then(response => response.json())
   .then(data => {
-    msgs = data;
-    select.innerHTML="";
     
-    msgs.forEach(msg => {
-      select.innerHTML+=`
-      <option value="${msg[0]}">${msg[1]}</option>
-      `;
-    });
-    renderMsgs();
+    const src = data["src"];
+    console.log(`src`, src);
+    preview.src=src;
+    
+    // msgs.forEach(msg => {
+    //   select.innerHTML+=`
+    //   <option value="${msg[0]}">${msg[1]}</option>
+    //   `;
+    // });
+    // renderMsgs();
   })
 }
 
 function sendMsg(message,callback) {
-  obj = {msg:message}
-  console.log(`sending: ${obj}`);
+  const obj = new FormData();
+  obj.append('msg', message);
+  obj.append('img', input_img.files[0]);
+
+  console.log(`sending=`,obj);  
   fetch(
     "http://localhost:1000/msg",
     {
       method:"POST",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body:JSON.stringify(obj)
+      // headers: {
+      //   'Content-Type': 'multipart/form-data'
+      // },
+      body:obj
     }
   )
   .then(respuesta=>respuesta.text())
   .then(data=>{
-    callback();
+    // callback();
     alert(data);
   })
   .catch(e=>{
-    alert("somethig went wrong");
+    alert("somethig went wrong:",e);
   })
 }
 function deleteMsg(id,callback) {
@@ -115,11 +123,16 @@ function updateMsg(id,message,callback) {
   
 }
 
-// btnGet.addEventListener("click",()=>{renderMsgs();})
 btnGet.addEventListener("click",()=>{    getMsgs()                           ;})
 btnSave.addEventListener("click",()=>{   sendMsg(input.value,getMsgs)                ;})
 btnDelete.addEventListener("click",()=>{ deleteMsg(select.value,getMsgs)             ;})
 btnUpdate.addEventListener("click",()=>{ updateMsg(select.value,input.value,getMsgs) ;})
+
+
+input_img.addEventListener("input",()=>{
+  const name = input_img.files[0].name;
+  input.value = name.split("-").join("_");
+})
 
 
 
@@ -127,17 +140,18 @@ btnUpdate.addEventListener("click",()=>{ updateMsg(select.value,input.value,getM
 function renderMsgs() {
   msgs.forEach(msg => {
     console.log(msg);
-
     // creo un nuevo objeto, a partir del contenido del template
     const newMsg = document.importNode(
       document.getElementById("msg-template").content,
       true);
-
-    // modifico el nuevo obj
-    newMsg.getElementById("msg").textContent = msg[1];
-
-    // lo anexo a un contenedor
-    msgContainer.appendChild(newMsg);
+      
+      // modifico el nuevo obj
+      newMsg.getElementById("msg").textContent = msg[1];
+      
+      // lo anexo a un contenedor
+      msgContainer.appendChild(newMsg);
   });
 }
+
+
 
