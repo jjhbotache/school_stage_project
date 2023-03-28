@@ -5,6 +5,7 @@ const inputAi= document.getElementById("input-ai");
 const preview = document.getElementById("preview")
 const realName = document.getElementById("real-name");
 
+const select = document.getElementById('select-designs');
 
 // import & create template
 let templateContent;
@@ -59,7 +60,7 @@ btnSave.addEventListener("click",()=>{
   }else if (inputAi.files[0].lenght>0) {
     alert("Please enter an Ai");
   }else{
-    sendDesign(inputName.value, inputImg.files[0], inputAi.files[0]);
+    sendDesign(realName.textContent, inputImg.files[0], inputAi.files[0]);
   }
 })
 
@@ -68,7 +69,11 @@ function updateRealName(str) {
   if (str=="") {
     alert("Please enter a name");
   }else{
-    realName.textContent = addExtension( str.toString().replace(" ", "_") );
+    const spaces_amount = str.split(" ");
+    for (let i = 0; i < spaces_amount.length; i++) {
+      str = str.replace(" ", "_")
+    }
+    realName.textContent = addExtension( str );
   }
   
 }
@@ -89,10 +94,45 @@ function addExtension(str) {
 
   return str;
 }
-
-inputName.addEventListener("blur",()=>{updateRealName();});
+// inputName.addEventListener("blur",()=>{updateRealName();});
 inputImg.addEventListener('change',()=>{
   inputName.value = inputImg.files[0].name;
   updateRealName();
 });
 
+
+
+const designViewTemplate = document.createElement("template");
+fetch('templates/design-view.html')
+.then(response => response.text())
+.then(data => {
+    designViewTemplate.id="design-view-template";
+    designViewTemplate.innerHTML=data;
+    document.body.appendChild(designViewTemplate);
+  })
+  
+fetch('http://127.0.0.1:1000/design')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+    data.forEach(design => {
+      const option = document.createElement('option');
+      option.value = design.name;
+      option.textContent = design.name;
+      select.appendChild(option);
+
+      const newView = document.importNode(designViewTemplate)
+      console.log("template:",designViewTemplate);
+      document.body.appendChild(newView);
+      console.log("newView:",newView);
+      
+      // newView.getElementById("img-name").textContent = data.name
+      // newView.getElementById("img").src = "http://127.0.0.1:1000/back/"+data.img_url
+      // newView.getElementById("download-ai").href = "http://127.0.0.1:1000/back/"+data.ai_url
+      
+
+    });
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });

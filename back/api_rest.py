@@ -56,15 +56,42 @@ class Data_base:
         # self.connection.commit()
         
     def save_design(self,name,img_route,ai_route):
-        self.cursor.execute(f"""
-                            INSERT INTO designs(name,png,ai)
-                            VALUES(
-                                "{name}",
-                                "{img_route}",
-                                "{ai_route}"
-                            )
-                            """)
-        self.connection.commit()
+        try:
+            self.cursor.execute(f"""
+                                INSERT INTO designs(name,img,ai)
+                                VALUES(
+                                    "{name}",
+                                    "{img_route}",
+                                    "{ai_route}"
+                                )
+                                """)
+            self.connection.commit()
+            return True
+        except Exception as e:
+          print('An exception occurred: ',e)
+          return False
+        
+    def get_all_designs(self):
+        try:
+            self.cursor.execute(f"""
+                                SELECT name,img,ai FROM designs
+                                """)
+            data = self.cursor.fetchall()
+            print(data)
+            formated_data = []
+            for row in data:
+                formated_data.append(
+                    {
+                        "name":row[0],
+                        "img_url":row[1],
+                        "ai_url":row[2]
+                    }
+                )
+            return formated_data
+        except Exception as e:
+            print('An exception occurred: ',e)
+            return False
+        
 
 
 # ----------------------------------------------------------------------------------------
@@ -80,22 +107,26 @@ def save_img():
     route_img = f"img/{name}"
     route_ai = f"ai/{name}"
 
-    # if os.path.isfile(route_ai) or os.path.isfile(route_img):
-    #     return f"file with name {name} already exist"
-    # else:
-    try:
-        img.save(route_img)
-        ai.save(route_ai)
-        connection = Data_base()
-        connection.save_design(
-            name,
-            route_img,
-            route_ai
-        )
-        return "Saved succesfully"
-    except Exception as e:
-        return f"Something went wrong {e}"
+    if os.path.isfile(route_ai) or os.path.isfile(route_img):
+        return f"file with name {name} already exist"
+    else:
+        try:
+            img.save(route_img)
+            ai.save(route_ai)
+            connection = Data_base()
+            connection.save_design(
+                name,
+                route_img,
+                route_ai
+            )
+            return "Saved succesfully"
+        except Exception as e:
+            return f"Something went wrong {e}"
 
+@app.route("/design", methods=["GET"])
+def get_imgs():
+    connection = Data_base()
+    return jsonify(connection.get_all_designs())
 # @app.route("/img/<string:name>")
 # def get_img(name):
 #     return send_file(f"imgs/Que_tu_niña_interior_viva_orgullosa_del_mujeron_que_eres.png", mimetype='image/png')
