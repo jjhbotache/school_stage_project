@@ -21,3 +21,38 @@ li{
 #real-name,#input-name{
   font-size: 0.5em;
 }
+
+:root{
+  --width-and-height : 80vh;
+}
+
+.floating-card{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: var(--width-and-height);
+  width: var(--width-and-height);
+  background: rgba(107, 42, 145, 0.9);
+  border-radius: 2em;
+  color: aliceblue;
+  z-index: 10;
+}
+.floating-card .img-container{
+  width: 200px;
+  height: auto;
+}
+.floating-card .img-container #close-img{
+  background: rgba(173, 39, 84, 0.9);
+  /* width: 2em; */
+  
+  height: 2em;
+  position: absolute;
+  transform: translate(200%,5%);
+  border-radius: 0.4em;
+}
+.floating-card .img-container #close-img:hover{
+  background: rgba(75, 0, 25, 0.9);
+  transform: scale(0.9);
+  transition: cubic-bezier(0.445, 0.05, 0.55, 0.95) 0.1s;
+}
