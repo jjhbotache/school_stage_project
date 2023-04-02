@@ -100,12 +100,13 @@ def save_img():
     name = request.form["name"]
     img = request.files["img"]
     ai = request.files["ai"]
+    print("name: ",name)
 
     if not rgx.match(name):
         return f"file with name {name} is unvalid"
     
-    route_img = f"img/{name}"
-    route_ai = f"ai/{name}"
+    route_img = f"img/{name}.png"
+    route_ai = f"ai/{name}.ai"
 
     if os.path.isfile(route_ai) or os.path.isfile(route_img):
         return f"file with name {name} already exist"
@@ -127,9 +128,13 @@ def save_img():
 def get_imgs():
     connection = Data_base()
     return jsonify(connection.get_all_designs())
-# @app.route("/img/<string:name>")
-# def get_img(name):
-#     return send_file(f"imgs/Que_tu_niña_interior_viva_orgullosa_del_mujeron_que_eres.png", mimetype='image/png')
+@app.route("/<string:kind>/<string:name>")
+def get_file(kind,name):
+    route = f"{kind}/{name}"
+    if kind == "img":
+        return send_file(route, mimetype='image/png')
+    elif kind == "ai":
+        return send_file(route)
 
 
 # ----------------------------------------------------------------------------------------
