@@ -19,9 +19,9 @@ li{
 }
 
 #real-name,#input-name{
-  font-size: 0.5em;
+  font-size: 0.7em;
 }
-
+/* ----------------------- */
 :root{
   --width-and-height : 80vh;
 }
@@ -37,6 +37,7 @@ li{
   border-radius: 2em;
   color: aliceblue;
   z-index: 10;
+  /* overflow: hidden; */
 }
 .floating-card .img-container{
   width: 200px;
@@ -47,6 +48,7 @@ li{
   /* width: 2em; */
   
   height: 2em;
+  min-height: 2em;
   position: absolute;
   transform: translate(200%,5%);
   border-radius: 0.4em;
@@ -54,4 +56,7 @@ li{
 .floating-card .img-container #close-img:hover{
   background: rgba(75, 0, 25, 0.9);
   transition: cubic-bezier(0.445, 0.05, 0.55, 0.95) 0.1s;
+}
+.floating-card .card-link{
+    font-size: 0.7em;
 }

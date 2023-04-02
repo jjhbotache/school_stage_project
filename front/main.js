@@ -7,25 +7,6 @@ const realName = document.getElementById("real-name");
 
 const select = document.getElementById('select-designs');
 
-// import & create template
-let templateContent;
-fetch("templates/msg.html")
-.then(response=>response.text())
-.then(text=>{
-  // creamos un elemento template
-  const template = document.createElement("template");
-  // al que le damos un id
-  template.id = "msg-template";
-
-  //agregamos la data obtenida de un html externo al template 
-  template.innerHTML = text;
-  // agregamos el elemento al documento
-  document.body.appendChild(template);
-  // redefinimos a templatecontent como el contenido del template
-})
-.catch(error=>{
-  console.log(error);
-})
 
 
 
@@ -69,70 +50,85 @@ function updateRealName(str) {
   if (str=="") {
     alert("Please enter a name");
   }else{
-    const spaces_amount = str.split(" ");
-    for (let i = 0; i < spaces_amount.length; i++) {
-      str = str.replace(" ", "_")
-    }
-    realName.textContent = addExtension( str );
+    realName.textContent = (str.split(" ").join("_")).replace(/-/g, "_");
+    realName.textContent = realName.textContent.substring(0,realName.textContent.indexOf("."));
+
   }
   
 }
-function addExtension(str) {
-  const allowedExtensions = [".png", ".jpg", ".jpeg"];
-  let hasExtension = false;
 
-  for (var i = 0; i < allowedExtensions.length; i++) {
-    if (str.indexOf(allowedExtensions[i]) !== -1) {
-      hasExtension = true;
-      break;
-    }
-  }
-
-  if (!hasExtension) {
-    str += ".png";
-  }
-
-  return str;
-}
-// inputName.addEventListener("blur",()=>{updateRealName();});
+inputName.addEventListener("blur",()=>{updateRealName();});
 inputImg.addEventListener('change',()=>{
   inputName.value = inputImg.files[0].name;
   updateRealName();
 });
 
 
-
+// creates a template
 const designViewTemplate = document.createElement("template");
 fetch('templates/design-view.html')
 .then(response => response.text())
 .then(data => {
-    designViewTemplate.id="design-view-template";
-    designViewTemplate.innerHTML=data;
+    // console.log(data);
+    designViewTemplate.id         =   "design-view-template";
+    designViewTemplate.innerHTML  =   data;
     document.body.appendChild(designViewTemplate);
-  })
-  
-fetch('http://127.0.0.1:1000/design')
-  .then(response => response.json())
-  .then(data => {
-    console.log(data);
-    data.forEach(design => {
-      const option = document.createElement('option');
-      option.value = design.name;
-      option.textContent = design.name;
-      select.appendChild(option);
+ })
 
-      const newView = document.importNode(designViewTemplate)
-      console.log("template:",designViewTemplate);
-      document.body.appendChild(newView);
-      console.log("newView:",newView);
-      
-      // newView.getElementById("img-name").textContent = data.name
-      // newView.getElementById("img").src = "http://127.0.0.1:1000/back/"+data.img_url
-      // newView.getElementById("download-ai").href = "http://127.0.0.1:1000/back/"+data.ai_url
-      
+ let fragment = document.createDocumentFragment()
 
+ console.log(document.querySelector("template"));
+
+const viewContainer = document.getElementById("view-container");
+loadDesigns();
+function loadDesigns() {
+  fetch('http://127.0.0.1:1000/design')
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      // start to make the objects from a template --------------------------------------------------------
+      data.forEach(design => {
+
+
+        // add options with a name
+        const option = document.createElement('option');
+        // option.id = removeAfterDot(design.name);
+        option.value = removeAfterDot(design.name);
+        option.textContent = design.name;
+        select.appendChild(option);
+        option.addEventListener('dblclick', (e) => {
+          console.log(("funciono y soy:", option));
+          document.getElementById(removeAfterDot(design.name)).classList.toggle("d-none");
+        });
+
+        const apiRoute = "http://127.0.0.1:1000/";
+
+        const newView = document.importNode(
+          designViewTemplate.content,
+          true
+        );
+        const id = removeAfterDot(design.name);
+        newView.querySelector(".floating-card").id = id;
+        newView.getElementById("img").src = apiRoute + design.img_url;
+        newView.getElementById("download-ai").href = apiRoute + design.ai_url;
+        newView.getElementById("img-name").textContent = design.name;
+
+        fragment.appendChild(newView);
+      });
+      viewContainer.appendChild(fragment);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      select.innerHTML="";
+      fragment.innerHTML="";
+
+      if (confirm("Something went wrong loading the designs, want to try again?")) {loadDesigns();}
     });
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
+}
+
+  // --------------------------------------------------------------------------------------------------------------
+  function removeAfterDot(str) {
+    const dotIndex = str.indexOf('.');
+    if (dotIndex === -1) return str;
+    return str.slice(0, dotIndex);
+  }
