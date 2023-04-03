@@ -91,7 +91,7 @@ class Data_base:
         except Exception as e:
             print('An exception occurred: ',e)
             return False
-        
+      
 
 
 # ----------------------------------------------------------------------------------------
@@ -128,6 +128,7 @@ def save_img():
 def get_imgs():
     connection = Data_base()
     return jsonify(connection.get_all_designs())
+
 @app.route("/<string:kind>/<string:name>")
 def get_file(kind,name):
     route = f"{kind}/{name}"
@@ -136,7 +137,19 @@ def get_file(kind,name):
     elif kind == "ai":
         return send_file(route)
 
-
+@app.route("/update/<string:kind>/<string:name>", methods=["POST"])
+def update(kind,name):
+    try:
+        if kind == "img":
+            route_img = f"img/{name}.png"
+            img = request.files["img"]
+            os.remove(route_img)
+            img.save(route_img)
+        return jsonify({"msg":"updated succesfully"})
+    except Exception as e:
+        return jsonify({"msg":f"An exception occurred: {e}"})
+    
+      
 # ----------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
