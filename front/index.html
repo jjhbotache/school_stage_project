@@ -21,39 +21,44 @@
 
 <body class="d-flex justify-content-center">
   
-  
-
   <div id="view-container"></div>
-  <main class="p-3 d-flex flex-column justify-content-center">
-    <h1>Add your design</h1>
-    <hr>
-    <div class="my-3">
-      
-      <label for="input" class="form-label">Name of the design</label>
-      <input type="text"class=" form-control" name="" id="input-name" placeholder="eres la flor mas bella en mi vida" maxlength="100">
-      <span class="mb-5 fs-6 fst-italic" id="real-name">-</span>
 
-      <img class="img-fluid w-50 my-1 d-block mx-auto" id="preview">
-      
-      <label for="input-img" class="form-label">Design png</label>
-      <input type="file" accept=".png" class="form-control mb-2" id="input-img">
-      <label for="input-ai" class="form-label">Design ai</label>
-      <input type="file" accept=".ai" class="form-control mb-2" id="input-ai">
-
-      
-      
-      <button id="btn-save" type="button" class="d-block my-3 mx-auto btn btn-info w-50 rounded-pill" >save</button>
-    </div>
-    <hr>
-
-    <div class="mb-3">
-      <label class="form-label">Designs</label>
-      <select multiple class="form-select form-select-lg" name="" id="select-designs"></select>
+  <main class="p-3 d-flex flex-column justify-content-center align-content-center container-md">
+    <div class="row d-flex justify-content-center">
+      <div class="col-8 col-sm-6 ">
+        <h1 id="title">Add your design</h1>
+        <hr>
+        <div class="my-3">
+          
+          <label for="input" class="form-label">Name of the design</label>
+          <input type="text"class=" form-control" name="" id="input-name" placeholder="eres la flor mas bella en mi vida" maxlength="100">
+          <span class="mb-5 fs-6 fst-italic" id="real-name">-</span>
+          
+          <img class="img-fluid w-25 my-1 d-block mx-auto rounded-2" id="preview">
+          
+          <label for="input-img" class="form-label">Design png</label>
+          <input type="file" accept=".png" class="form-control mb-2" id="input-img">
+          <label for="input-ai" class="form-label">Design ai</label>
+          <input type="file" accept=".ai" class="form-control mb-2" id="input-ai">
+          
+          
+          
+          <button id="btn-save" type="button" class="d-block my-3 mx-auto btn btn-info w-50 rounded-pill" >save</button>
+          <button id="btn-update" type="button" class="d-block d-none my-3 mx-auto btn btn-success w-50 rounded-pill" >update</button>
+        </div>
+        <hr>
+        
+        <div id="designs-spinner" class="spinner-border text-primary spinner-border-sm"role="status"></div>
+        <div id="designs" class="mb-3 d-none">
+          <label class="form-label">Designs</label>
+          <select multiple class="form-select form-select-lg" name="" id="select-designs"></select>
+        </div>
+      </div>
     </div>
   </main>
-
-  <!-- Bootstrap JavaScript Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    
+    <!-- Bootstrap JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
     integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
   </script>
 

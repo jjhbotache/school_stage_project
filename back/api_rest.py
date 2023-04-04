@@ -74,17 +74,19 @@ class Data_base:
     def get_all_designs(self):
         try:
             self.cursor.execute(f"""
-                                SELECT name,img,ai FROM designs
+                                SELECT name,img,ai,id_designs FROM designs
                                 """)
             data = self.cursor.fetchall()
             print(data)
             formated_data = []
+            os.system("cls")
             for row in data:
                 formated_data.append(
                     {
                         "name":row[0],
                         "img_url":row[1],
-                        "ai_url":row[2]
+                        "ai_url":row[2],
+                        "id": row[3],
                     }
                 )
             return formated_data
@@ -92,7 +94,14 @@ class Data_base:
             print('An exception occurred: ',e)
             return False
       
-
+    def update_design(self,id,field,new_data):
+        assert field in ["name","img","ai"]
+        self.cursor.execute(f"""
+                            UPDATE designs
+                            SET {field} = "{new_data}"
+                            WHERE id_designs = {id}
+                            """)
+        self.connection.commit()
 
 # ----------------------------------------------------------------------------------------
 @app.route("/design", methods=["POST"])
@@ -125,7 +134,7 @@ def save_img():
             return f"Something went wrong {e}"
 
 @app.route("/design", methods=["GET"])
-def get_imgs():
+def get_designs():
     connection = Data_base()
     return jsonify(connection.get_all_designs())
 
@@ -137,15 +146,22 @@ def get_file(kind,name):
     elif kind == "ai":
         return send_file(route)
 
-@app.route("/update/<string:kind>/<string:name>", methods=["POST"])
-def update(kind,name):
+@app.route("/update_design/<int:id>/<string:field>", methods=["POST"])
+def update(id,field):
+    data = request.get_json()["new_data"]
+    print(data)
     try:
-        if kind == "img":
+        if field == "name":
+            conn = Data_base()
+            conn.update_design(id,field,data)
+            
+        if field == "img":
             route_img = f"img/{name}.png"
             img = request.files["img"]
             os.remove(route_img)
             img.save(route_img)
         return jsonify({"msg":"updated succesfully"})
+    
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
     
