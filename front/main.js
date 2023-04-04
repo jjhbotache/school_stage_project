@@ -118,8 +118,10 @@ function loadDesigns() {
       console.error('Error:', error);
       select.innerHTML="";
       fragment.innerHTML="";
-
-      if (confirm("Something went wrong loading the designs, want to try again?")) {loadDesigns();}
+      setTimeout(() => {
+        console.log("trying again...");
+        loadDesigns()
+      }, 1000);
     });
 }
 
