@@ -6,7 +6,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-rgx = re.compile(r'^[\w\-.]+$')
 
 @app.route('/')
 def test():
@@ -107,15 +106,13 @@ class Data_base:
 @app.route("/design", methods=["POST"])
 def save_img():
     name = request.form["name"]
+    files_name = request.form["filesName"]
     img = request.files["img"]
     ai = request.files["ai"]
     print("name: ",name)
 
-    if not rgx.match(name):
-        return f"file with name {name} is unvalid"
-    
-    route_img = f"img/{name}.png"
-    route_ai = f"ai/{name}.ai"
+    route_img = f"img/{files_name}.png"
+    route_ai = f"ai/{files_name}.ai"
 
     if os.path.isfile(route_ai) or os.path.isfile(route_img):
         return f"file with name {name} already exist"
@@ -148,18 +145,32 @@ def get_file(kind,name):
 
 @app.route("/update_design/<int:id>/<string:field>", methods=["POST"])
 def update(id,field):
-    data = request.get_json()["new_data"]
-    print(data)
     try:
         if field == "name":
+            data = request.get_json()["new_data"]
             conn = Data_base()
             conn.update_design(id,field,data)
             
         if field == "img":
-            route_img = f"img/{name}.png"
+            print("changing img")
+            conn = Data_base()
+            designs = conn.get_all_designs()
+            route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
+            print("changing the img at ",route_img)
+            
             img = request.files["img"]
             os.remove(route_img)
             img.save(route_img)
+        
+        if field == "ai":
+            print("changing img")
+            conn = Data_base()
+            designs = conn.get_all_designs()
+            route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
+            ai = request.files["ai"]
+            os.remove(route_ai)
+            ai.save(route_ai)
+        
         return jsonify({"msg":"updated succesfully"})
     
     except Exception as e:
