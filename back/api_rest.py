@@ -102,6 +102,12 @@ class Data_base:
                             """)
         self.connection.commit()
 
+    def delete_design(self,id):
+        self.cursor.execute(f"""
+                            DELETE FROM DESIGNS
+                            WHERE id_designs = {id}
+                            """)
+        self.connection.commit()
 # ----------------------------------------------------------------------------------------
 @app.route("/design", methods=["POST"])
 def save_img():
@@ -172,6 +178,24 @@ def update(id,field):
             ai.save(route_ai)
         
         return jsonify({"msg":"updated succesfully"})
+    
+    except Exception as e:
+        return jsonify({"msg":f"An exception occurred: {e}"})
+    
+@app.route("/delete_design/<int:id>", methods=["DELETE"])
+def delete_design(id):
+    try:
+        print(f"DELETING design with id: {id}")
+        conn = Data_base()
+        designs = conn.get_all_designs()
+        design = list(filter(lambda design : design["id"]==id, designs))[0]
+        route_ai=design["ai_url"]
+        route_img=design["img_url"]
+        os.remove(route_ai)
+        os.remove(route_img)
+        conn.delete_design(id)
+        
+        return jsonify({"msg":"deleted succesfully"})
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})

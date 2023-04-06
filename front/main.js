@@ -6,14 +6,46 @@ const inputAi= document.getElementById("input-ai");
 const preview = document.getElementById("preview")
 const realName = document.getElementById("real-name");
 
+
 const select = document.getElementById('select-designs');
 
+// -------------
+let fragment = document.createDocumentFragment()
+const viewContainer = document.getElementById("view-container");
+const designs = [];
+const designViewTemplate = document.createElement("template");
+// -------------
 
+btnSave.addEventListener("click",()=>{
+  if (inputName.value==""){
+    alert("Please enter a name");
+  }else if (inputImg.files[0].lenght>0) {
+    alert("Please enter an Img");
+  }else if (inputAi.files[0].lenght>0) {
+    alert("Please enter an Ai");
+  }else{
+    sendDesign(inputName.value,realName.textContent, inputImg.files[0], inputAi.files[0]);
+  }
+})
+inputName.addEventListener("input",()=>{
+  updateRealName();
+});
+inputImg.addEventListener('change',()=>{
+  inputName.value = inputImg.files[0].name;
+  const reader = new FileReader();
+  reader.onloadend = () => {preview.src = reader.result};
+  reader.readAsDataURL(inputImg.files[0])
 
+  preview.src = inputImg.files[0]
+  updateRealName();
+});
 
-function sendDesign(name,img,ai) {
+// =========================================================================================
+
+function sendDesign(name,filesName,img,ai) {
   const data = new FormData();
   data.append('name', name);
+  data.append('filesName', filesName);
   data.append('img', img);
   data.append('ai', ai);
 
@@ -34,62 +66,6 @@ function sendDesign(name,img,ai) {
   })
 }
 
-btnSave.addEventListener("click",()=>{
-  if (inputName.value==""){
-    alert("Please enter a name");
-  }else if (inputImg.files[0].lenght>0) {
-    alert("Please enter an Img");
-  }else if (inputAi.files[0].lenght>0) {
-    alert("Please enter an Ai");
-  }else{
-    sendDesign(realName.textContent, inputImg.files[0], inputAi.files[0]);
-  }
-})
-
-function updateRealName(str) {
-  str = str||inputName.value;
-  if (str=="") {
-    alert("Please enter a name");
-  }else{
-    console.log(str);
-    realName.textContent = (str.split(" ").join("_")).replace(/[\\/*<>| ]/g, "_");
-    realName.textContent = realName.textContent.replace(/[?:"]/g, "-");
-    realName.textContent = realName.textContent.substring(0,realName.textContent.indexOf(".")!=-1?realName.textContent.indexOf("."):realName.textContent.length)
-
-  }
-  
-}
-
-inputName.addEventListener("input",()=>{updateRealName();});
-inputImg.addEventListener('change',()=>{
-  inputName.value = inputImg.files[0].name;
-  q
-  const reader = new FileReader();
-  reader.onloadend = () => {preview.src = reader.result};
-  reader.readAsDataURL(inputImg.files[0])
-
-  preview.src = inputImg.files[0]
-  updateRealName();
-});
-
-
-// creates a template
-const designViewTemplate = document.createElement("template");
-fetch('templates/design-view.html')
-.then(response => response.text())
-.then(data => {
-    // console.log(data);
-    designViewTemplate.id         =   "design-view-template";
-    designViewTemplate.innerHTML  =   data;
-    document.body.appendChild(designViewTemplate);
- })
-
- let fragment = document.createDocumentFragment()
-
-
-const viewContainer = document.getElementById("view-container");
-loadDesigns();
-let designs = [];
 function loadDesigns() {
   fetch('http://127.0.0.1:1000/design')
     .then(response => response.json())
@@ -157,6 +133,20 @@ function createView(name) {
       updateDesign(design.name);
       all.classList.add("d-none");
     };
+    if (e.target.id === "delete") {
+      if (confirm(`Do you want do delete "${design.name}" design?`)) {
+        fetch(apiRoute+"delete_design/"+design.id.toString(),{method:"DELETE"})
+        .then((response) => {
+          response.json()
+        })
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((e) => {
+          console.log(e);
+        })
+      }
+    };
   });
   fragment.appendChild(newView);
   viewContainer.appendChild(fragment);
@@ -190,46 +180,94 @@ async function updateDesign(name) {
   
   await waitForUpdate(design.name);
   
-  if (inputImg.files.length<1) {
-    console.log("img wasn't changed")
-  }else{
+  if (inputAi.files.length>0) {
+    console.log(`Changing ai file`);
+  
+    const data = new FormData();
+    data.append("ai",inputAi.files[0])
+  
+    fetch(`http://127.0.0.1:1000/update_design/${design.id}/ai`,
+    {
+      method: 'POST',
+      body:data
+    })
+    .then(response => response.json())
+    .then((data) => {console.log(data);})  
+    .catch(error => console.log(error));
   }
-  if (inputAi.files.length<1) {
-    console.log("Ai doesn't was changed")
-  }else{
-    
+  if (inputImg.files.length>0) {
+    console.log(`Changing img file`);
+
+    const data = new FormData();
+    data.append("img",inputImg.files[0])
+
+    fetch(`http://127.0.0.1:1000/update_design/${design.id}/img`,
+    {
+      method: 'POST',
+      body:data
+    })
+    .then(response => response.json())
+    .then((data) => {console.log(data);})  
+    .catch(error => console.log(error));
   }
-  if (realName.value != design.name) {
-    // alert(`Changing name from ${design.name} to ${realName.textContent}`);
+  if (inputName.value != design.name) {
+    console.log(`Changing name from ${design.name} to ${inputName.value}`);
+    fetch(`http://127.0.0.1:1000/update_design/${design.id}/name`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body:JSON.stringify(
+        {
+          new_data:inputName.value
+        }
+      )
+    })
+    .then(response => response.json())
+    .then((data) => {console.log(data);})  
+    .catch(error => console.log(error));
   }
-  fetch(`http://127.0.0.1:1000/update_design/${design.id}/name`,
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body:JSON.stringify(
-      {
-        "new_data":realName.textContent
-      }
-    )
-  })
-  .then(response => response.json())
-  .then((data) => {
-    console.log(data);
-  })  
-  .catch(error => console.log(error));
+
+
   btnUpdate.classList.add("d-none");
   btnSave.classList.remove("d-none");
   document.getElementById("title").textContent = "Add your design"
   
-  
+  alert("updated!")
   window.location.reload();
 }
 
+// =========================================================================================
 // --------------------------------------------------------------------------------------------------------------
 function removeAfterDot(str) {
   const dotIndex = str.indexOf('.');
   if (dotIndex === -1) return str;
   return str.slice(0, dotIndex);
 }
+
+function updateRealName(str) {
+  str = str||inputName.value;
+  console.log(str);
+  if (inputName.value.includes(".")) {
+    document.getElementById("dot-alert").classList.remove("d-none");
+  }else{document.getElementById("dot-alert").classList.add("d-none");}
+
+  realName.textContent = (str.split(" ").join("_")).replace(/[\\/*<>| ]/g, "_");
+  realName.textContent = realName.textContent.replace(/[?:"]/g, "-");
+  realName.textContent = realName.textContent.substring(0,realName.textContent.indexOf(".")!=-1?realName.textContent.indexOf("."):realName.textContent.length)
+  
+}
+// -------------------------------------------------------------------------------------------------------------
+
+// creates a template
+fetch('templates/design-view.html')
+.then(response => response.text())
+.then(data => {
+    // console.log(data);
+    designViewTemplate.id         =   "design-view-template";
+    designViewTemplate.innerHTML  =   data;
+    document.body.appendChild(designViewTemplate);
+})
+
+loadDesigns();
