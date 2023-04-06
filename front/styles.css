@@ -1,10 +1,3 @@
-body{
-  height: 100vh;
-}
-main{
-  max-width: 80vh;
-  max-height: 95vh;
-}
 li{
   list-style: none;
 }
@@ -16,4 +9,64 @@ li{
   height: 50vh;
   overflow-y: scroll;
   background: #003d4e !important;
+}
+
+#real-name,#input-name{
+  font-size: 0.7em;
+}
+/* ----------------------- */
+:root{
+  --width-and-height : 80vh;
+}
+
+.floating-card{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: var(--width-and-height);
+  width: var(--width-and-height);
+  background: rgba(107, 42, 145, 0.9);
+  border-radius: 2em;
+  color: aliceblue;
+  z-index: 10;
+}
+.floating-card .img-container{
+  width: 200px;
+  height: auto;
+}
+.floating-card .img-container #update-img{
+  background: rgba(42, 0, 74, 0.9);
+  /* width: 2em; */
+  
+  height: 2em;
+  min-height: 2em;
+  position: absolute;
+  transform: translate(200%,5%);
+  border-radius: 0.4em;
+  transition: all 0.2s ease-in-out;
+}
+.floating-card .img-container #update-img:hover{
+  background: rgba(75, 0, 25, 0.9);
+  transform: scale(1.03) translate(200%,5%);
+  /* transition: cubic-bezier(0.445, 0.05, 0.55, 0.95) 0.1s; */
+}
+.floating-card .card-link{
+  font-size: 0.7em;
+}
+#change-window{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  min-width: 5em;
+  min-height: 5em;
+  background: rgba(0, 78, 179, 0.98);
+  z-index: 15;
+}
+
+
+/* ------------------------ */
+#dot-alert{
+  transition: 5s ease-in;
 }
