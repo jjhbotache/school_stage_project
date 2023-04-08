@@ -1,4 +1,4 @@
-from flask import Flask,jsonify,request,send_file
+from flask import Flask,jsonify,request,send_file,redirect
 import pymysql
 import os
 import re
@@ -7,9 +7,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.route('/')
-def test():
-    return '<h1>holam</h1>'
 
 
 class Data_base:
@@ -21,38 +18,6 @@ class Data_base:
             database="school_stage_project"  
         )
         self.cursor = self.connection.cursor()
-    
-    # def get_msgs(self):
-    #     self.cursor.execute(f"""
-    #                         SELECT name,png FROM designs
-    #                         """)
-        
-    #     return self.cursor.fetchall()
-    
-    # def insert_design(self,msg,img_dir):
-    #     self.cursor.execute(f"""
-    #                         INSERT INTO designs(name,png)
-    #                         VALUES(
-    #                             "{msg}",
-    #                             "{img_dir}"
-    #                             )
-    #                         """)
-    #     self.connection.commit()
-
-    # def delete_msg(self,id):
-    #     self.cursor.execute(f"""
-    #                         DELETE FROM messages
-    #                         WHERE id = {id}
-    #                         """)
-    #     self.connection.commit()
-        
-    # def update_msg(self,id,msg):
-        # self.cursor.execute(f"""
-        #                     UPDATE messages
-        #                     SET msg = "{msg}"
-        #                     WHERE id = {id}
-        #                     """)
-        # self.connection.commit()
         
     def save_design(self,name,img_route,ai_route):
         try:
@@ -108,6 +73,46 @@ class Data_base:
                             WHERE id_designs = {id}
                             """)
         self.connection.commit()
+
+    #CRUD
+    
+    def create(self, table, data):
+        
+        columns = data.keys()
+        query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ("
+        for column in columns:
+            query += data[column]+", "
+        
+        query = query[:-2]+")"
+        
+        print(query)
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    def read(self, table, columns=[], where=None):
+        columns = ', '.join(columns) if len(columns) > 0 else "*"
+        query = f"SELECT {columns} FROM {table}"
+        if where:   
+            query += f" WHERE {where}"
+        self.cursor.execute(query)
+        result = self.cursor.fetchall()
+        return result
+
+    def update(self, table, data, where):
+        columns = list(data.keys())
+        print(columns)
+        assert len(columns)==1
+        query = f"UPDATE {table} SET {columns[0]} = {data[columns[0]]} WHERE {where}"
+        self.cursor.execute(query)
+        self.connection.commit()
+        return self.cursor.rowcount
+
+    def delete(self, table, where):
+        query = f"DELETE FROM {table} WHERE {where}"
+        self.cursor.execute(query)
+        self.connection.commit()
+        return self.cursor.rowcount
+
 # ----------------------------------------------------------------------------------------
 @app.route("/design", methods=["POST"])
 def save_img():
@@ -146,11 +151,11 @@ def get_file(kind,name):
     route = f"{kind}/{name}"
     if kind == "img":
         return send_file(route, mimetype='image/png')
-    elif kind == "ai":
+    elif kind == "ai":  
         return send_file(route)
 
 @app.route("/update_design/<int:id>/<string:field>", methods=["POST"])
-def update(id,field):
+def update_design(id,field):
     try:
         if field == "name":
             data = request.get_json()["new_data"]
@@ -199,8 +204,46 @@ def delete_design(id):
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
-    
       
+# ----------------------------------------------------------------------------------------
+@app.route("/insert/<string:table>")
+def insert(table):
+    try:
+        conn = Data_base()
+        data = request.get_json()
+        conn.create(table,data)
+        return jsonify({"msg":f"created succesfully"})
+    except Exception as e:
+        return jsonify({"msg":f"An error ocurred: {e}"})
+ 
+@app.route("/read/<string:table>")
+def read(table):
+    try:
+        conn = Data_base()
+        return jsonify(conn.read(table))
+    except Exception as e:
+        return jsonify({"msg":f"An error ocurred: {e}"})
+ 
+@app.route("/update/<string:table>/<int:id>")
+def update(table,id):
+    try:
+        conn = Data_base()
+        data = request.get_json()
+        conn.update(table,data,f'id={id}')
+        return jsonify({"msg":"updated successfully"})
+    except Exception as e:
+        return jsonify({"msg":f"An error ocurred: {e}"})
+ 
+@app.route("/delete/<string:table>/<int:id>")
+def delete(table,id):
+    try:
+        conn = Data_base()
+        data = request.get_json()
+        conn.delete(table,f'id={id}')
+        return jsonify({"msg":"deleted successfully"})
+    except Exception as e:
+        return jsonify({"msg":f"An error ocurred: {e}"})
+ 
 # ----------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
