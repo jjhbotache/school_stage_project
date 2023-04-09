@@ -100,7 +100,6 @@ class Data_base:
 
     def update(self, table, data, where):
         columns = list(data.keys())
-        print(columns)
         assert len(columns)==1
         query = f"UPDATE {table} SET {columns[0]} = {data[columns[0]]} WHERE {where}"
         self.cursor.execute(query)
@@ -206,7 +205,7 @@ def delete_design(id):
         return jsonify({"msg":f"An exception occurred: {e}"})
       
 # ----------------------------------------------------------------------------------------
-@app.route("/insert/<string:table>")
+@app.route("/insert/<string:table>",methods=["POST"])
 def insert(table):
     try:
         conn = Data_base()
@@ -224,7 +223,7 @@ def read(table):
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
-@app.route("/update/<string:table>/<int:id>")
+@app.route("/update/<string:table>/<int:id>",methods=["PUT"])
 def update(table,id):
     try:
         conn = Data_base()
@@ -234,11 +233,10 @@ def update(table,id):
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
-@app.route("/delete/<string:table>/<int:id>")
+@app.route("/delete/<string:table>/<int:id>",methods=["DELETE"])
 def delete(table,id):
     try:
         conn = Data_base()
-        data = request.get_json()
         conn.delete(table,f'id={id}')
         return jsonify({"msg":"deleted successfully"})
     except Exception as e:
