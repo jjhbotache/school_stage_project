@@ -6,16 +6,20 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-
-
+# database data
+# Server: sql10.freemysqlhosting.net
+# Name: sql10612108
+# Username: sql10612108
+# Password: CeU5TeAVxP
+# Port number: 3306
 
 class Data_base:
     def __init__(self):
         self.connection = pymysql.connect(
-            host="localhost",
-            user="root",
-            password="J1234567890j",
-            database="school_stage_project"  
+            host="sql10.freemysqlhosting.net",
+            user="sql10612108",
+            password="CeU5TeAVxP",
+            database="sql10612108"  
         )
         self.cursor = self.connection.cursor()
         
