@@ -7,6 +7,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+
+  <link rel="stylesheet" href="css/main.css">
   <!-- Bootstrap CSS v5.2.1 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
@@ -14,14 +16,12 @@
 </head>
 
 <body>
-  
-  <main>
-    <a name="designs-admin" id="designs-admin" class="btn btn-success rounded-pill m-3" href="designs-manager.html" role="button">Designs manager</a>
-    <a name="wine-kinds-admin" id="wine-kinds-admin" class="btn btn-success rounded-pill m-3" href="wines_manager.html" role="button">Wines manager</a>
-  </main>
-  <footer>
-    <!-- place footer here -->
-  </footer>
+  <div id="nav"></div>
+  <hr class="mx-4">
+  <div id="manager"></div>
+
+  <script src="js/wines_manager.js" type="module"></script>
+  <script src="js/modules/elementImporter.js" type="module"></script>
   <!-- Bootstrap JavaScript Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
     integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
