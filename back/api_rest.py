@@ -42,7 +42,7 @@ class Data_base:
     def get_all_designs(self):
         try:
             self.cursor.execute(f"""
-                                SELECT name,img,ai,id_designs FROM designs
+                                SELECT name,img,ai,id FROM designs
                                 """)
             data = self.cursor.fetchall()
             print(data)
@@ -98,6 +98,7 @@ class Data_base:
         query = f"SELECT {columns} FROM {table}"
         if where:   
             query += f" WHERE {where}"
+        print(query)
         self.cursor.execute(query)
         result = self.cursor.fetchall()
         return result
@@ -117,6 +118,7 @@ class Data_base:
         return self.cursor.rowcount
 
 # ----------------------------------------------------------------------------------------
+# designs
 @app.route("/design", methods=["POST"])
 def save_img():
     name = request.form["name"]
@@ -204,6 +206,22 @@ def delete_design(id):
         conn.delete_design(id)
         
         return jsonify({"msg":"deleted succesfully"})
+    
+    except Exception as e:
+        return jsonify({"msg":f"An exception occurred: {e}"})
+      
+# ----------------------------------------------------------------------------------------
+# users
+@app.route("/get_user", methods=["POST"])
+def get_user():
+    try:
+        print(f"getting user")
+        credentials = request.get_json()
+        print(credentials)
+        conn = Data_base()
+        result = conn.read("users",["name","last_name","email","phone"],f"email='{credentials['user']}' AND phone = {credentials['password']}")
+        
+        return jsonify(result)
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
