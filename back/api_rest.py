@@ -16,10 +16,14 @@ CORS(app)
 class Data_base:
     def __init__(self):
         self.connection = pymysql.connect(
-            host="sql10.freemysqlhosting.net",
-            user="sql10612108",
-            password="CeU5TeAVxP",
-            database="sql10612108"  
+            host="localhost",
+            user="root",
+            password="J1234567890j",
+            database="school_stage_project"  
+            # host="sql10.freemysqlhosting.net",
+            # user="sql10612108",
+            # password="J1234567890j",
+            # database="sql10612108"  
         )
         self.cursor = self.connection.cursor()
         
@@ -219,14 +223,27 @@ def get_user():
         credentials = request.get_json()
         print(credentials)
         conn = Data_base()
-        result = conn.read("users",["name","last_name","email","phone"],f"email='{credentials['user']}' AND phone = {credentials['password']}")
+        result = conn.read(
+                "users",
+                [],
+                f"id={credentials['id']} AND phone = {credentials['phone']}"
+            )[0]
         
-        return jsonify(result)
+        return jsonify(
+            {
+                "id":result[0],
+                "first_name":result[1],
+                "last_name":result[2],
+                "phone":result[3],
+                "email":result[4],
+            }
+        )
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
       
 # ----------------------------------------------------------------------------------------
+# general managment
 @app.route("/insert/<string:table>",methods=["POST"])
 def insert(table):
     try:
