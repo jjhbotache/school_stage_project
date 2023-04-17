@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <title>Title</title>
+  <title>login</title>
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -15,25 +15,25 @@
 </head>
 
 <body>
+  <div id="nav"></div>
+  <hr class="mx-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <form id="credentials-forms">
+          <input id="id" class="form-control mt-3" placeholder="Número de identificación" type="text" >
+          <input id="phone" class="form-control mt-3" placeholder="Número de celular" type="text" >
+          <button type="submit" class="btn btn-primary rounded-pill mt-3 w-25">Entrar</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
-  <nav class="nav mx-2 mt-1">
-    <span class="navbar-title me-2" onclick="window.location.href = 'index.html' ">Memorable</span>
-    <li class="nav-item d-flex flex-column justify-content-center">
-      <a class="nav-link" href="designs-manager.html">Designs</a>
-    </li>
-    <li class="nav-item d-flex flex-column justify-content-center">
-      <a class="nav-link" href="wines_manager.html">wines</a>
-    </li>
-    <li class="nav-item d-flex flex-column justify-content-center">
-      <a class="nav-link" href="login.html">login</a>
-    </li>
-    <li id="log-stat" class="nav-item d-flex flex-column justify-content-center">
-      <a class="nav-link" href="#">No logeado</a>
-    </li>
-    
-  </nav>
+  <script src="js/modules/elementImporter.js" type="module"></script>
+  <script src="js/modules/globalVars.js" type="module"></script>
+  <script src="js/login.js" type="module"></script>
 
-
+  <!-- Bootstrap JavaScript Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
     integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
   </script>

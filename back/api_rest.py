@@ -219,13 +219,13 @@ def delete_design(id):
 @app.route("/get_user", methods=["POST"])
 def get_user():
     try:
-        print(f"getting user")
+        print(f"getting user ",request.get_json()["id"])
         credentials = request.get_json()
         print(credentials)
         conn = Data_base()
         result = conn.read(
                 "users",
-                [],
+                [], #all
                 f"id={credentials['id']} AND phone = {credentials['phone']}"
             )[0]
         

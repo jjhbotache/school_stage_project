@@ -40,8 +40,7 @@ importElement("templates/manager.html")
 })
 
 importElement("templates/navbar.html")
-.then((response) => {
-  element = response;
+.then((element) => {
   document.getElementById("nav").appendChild(element);  
 })
 
@@ -55,6 +54,7 @@ function loadWines(select) {
   fetch("http://127.0.0.1:1000/read/wine_kinds")
   .then(response=>response.json())
   .then(json=>{
+    console.log(json);
     json.forEach(wine => {
       select.innerHTML +=`<option value="${wine[0]}">${wine[1]}</option>`
     });

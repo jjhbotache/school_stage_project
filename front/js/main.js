@@ -1,3 +1,5 @@
+import importElement from "/front/js/modules/elementImporter.js";
+
 const btnSave = document.getElementById("btn-save");
 const btnUpdate = document.getElementById("btn-update");
 const inputName = document.getElementById("input-name");
@@ -15,6 +17,11 @@ const viewContainer = document.getElementById("view-container");
 const designs = [];
 const designViewTemplate = document.createElement("template");
 // -------------
+
+importElement("templates/navbar.html")
+.then((element) => {
+  document.getElementById("nav").appendChild(element);  
+})
 
 btnSave.addEventListener("click",()=>{
   if (inputName.value==""){

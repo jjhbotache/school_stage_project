@@ -1,7 +1,11 @@
 :root{
   --width-and-height : 80vh;
-  --bs-success:rgba(237, 40, 255,1);
-  --primary:rgba(237, 40, 255,1);
+  --primary:#3E081B;
+  --secondary:#F3CBD9;
+  --tertiary:#FCF8F4;
+}
+body{
+  background: var(--tertiary) !important;
 }
 /* --------------------- 
       manager styles
@@ -26,5 +30,12 @@
 }
 .nav-link:hover {
   filter:opacity(0.7) ; 
+}
+#log-stat{
+  margin-left: auto;
+  margin-right: 2em;
+}
+#log-stat a{
+  color: var(--secondary) !important;
 }
 /* --------------------- */
