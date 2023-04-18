@@ -39,10 +39,7 @@ importElement("templates/manager.html")
   });
 })
 
-importElement("templates/navbar.html")
-.then((element) => {
-  document.getElementById("nav").appendChild(element);  
-})
+
 
 
 

@@ -1,17 +1,20 @@
-import importElement from "/front/js/modules/elementImporter.js";
-import {userInfoKeys} from '/front/js/modules/globalVars.js';
-const form = document.getElementById("credentials-forms");
+import {userInfoKeys,checkLocalStorageItems} from '/front/js/modules/globalVars.js';
+const loginForm = document.getElementById("login");
+const registerForm = document.getElementById("register");
+const title = document.getElementById("title");
+const subtitle = document.getElementById("subtitle");
+const changeLink = document.getElementById("link-change");
+const alertRegister = document.getElementById("alert-register");
 
-importElement("templates/navbar.html")
-.then((element) => {
-  element.querySelector("#log-stat a").textContent = checkLocalStorageItems(userInfoKeys)?localStorage.getItem("first_name"):"no logeado";
-  document.getElementById("nav").appendChild(element);  
-})
 
-form.addEventListener('click', (e)=>{
+if (checkLocalStorageItems(userInfoKeys)) {
+  window.location.assign("dashboard.html"); 
+}
+
+loginForm.addEventListener('click', (e)=>{
   e.preventDefault();
-  const id = form.querySelector("#id").value;
-  const phone = form.querySelector("#phone").value;
+  const id = loginForm.querySelector("#id").value;
+  const phone = loginForm.querySelector("#phone").value;
   if (e.target.type == "submit" ) {
     fetch("http://127.0.0.1:1000/get_user", {
       method: "POST",
@@ -29,30 +32,72 @@ form.addEventListener('click', (e)=>{
         for (const key in result) {
           localStorage.setItem(key.toString(),(result[key]).toString())
         }
-        alert(`bienvenido ${result["first_name"]}`)
-        element.querySelector("#log-stat a").textContent = checkLocalStorageItems(userInfoKeys)?localStorage.getItem("first_name"):"no logeado";
+        window.location.assign("dashboard.html"); 
+      })
+      .catch(error => console.error(error));
+  }
+})
+registerForm.addEventListener('click', (e)=>{
+  e.preventDefault();
+  if (e.target.type == "submit") {
+    const first_name = registerForm.querySelector("#first_name").value;
+    const last_name = registerForm.querySelector("#last_name").value;
+    const id = registerForm.querySelector("#id").value;
+    const phone = registerForm.querySelector("#phone").value;
+    const email = registerForm.querySelector("#email").value;
+    if (id.length < 10 || phone.length < 10) {
+      console.log("hola");
+      return undefined;
+    }
+    fetch("http://127.0.0.1:1000/add_user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        first_name:`'`+first_name+`'`,
+        last_name:`'`+last_name+`'`,
+        id: id,
+        phone: phone,
+        email:`'`+email+`'`,
+      }),
+    })
+      .then(response => response.json())
+      .then(result => {
+        console.log(result);
+
+        try {
+          console.log(result.msg);
+          if (result.msg.includes("Duplicate entry")) {
+            alertRegister.classList.remove("d-none");
+            alertRegister.querySelector("strong").textContent = "Esta cuenta ya existe";
+          }
+        } catch (error) {
+          debugger
+          change();
+          title.textContent = `Bienvenido ${first_name}, logeate!`
+        }
+        // debugger;
       })
       .catch(error => console.error(error));
   }
 })
 
-// auxiliary functions
-function checkLocalStorageItems(items) {
-  // Comprobar si el localStorage está disponible en el navegador
-  if (!window.localStorage) {
-    console.error("El localStorage no está disponible en este navegador.");
-    return false;
+changeLink.addEventListener('click', ()=>{change()})
+function change(params) {
+  loginForm.classList.toggle("d-none");
+  registerForm.classList.toggle("d-none");
+
+  if (registerForm.classList.contains("d-none")) {
+    title.textContent = "Hola de vuelta!";
+    subtitle.textContent = "¿Aun no eres parte de nuestro equipo?";
+    changeLink.textContent = "unete aqui";
+  }else{
+    title.textContent = "Bienvenido al grupo Memorable";
+    subtitle.textContent = "¿Ya tienes cuenta?";
+    changeLink.textContent = "logeate aqui";
   }
-  
-  // Comprobar si los items están almacenados en el localStorage
-  for (let item of items) {
-    if (!localStorage.getItem(item)) {
-      console.error(`El item ${item} no está almacenado en el localStorage.`);
-      return false;
-    }
-  }
-  
-  // Todos los items están almacenados en el localStorage
-  console.log("Todos los items están almacenados en el localStorage.");
-  return true;
 }
+
+
+

@@ -78,7 +78,7 @@ class Data_base:
     def delete_design(self,id):
         self.cursor.execute(f"""
                             DELETE FROM DESIGNS
-                            WHERE id_designs = {id}
+                            WHERE id = {id}
                             """)
         self.connection.commit()
 
@@ -205,13 +205,14 @@ def delete_design(id):
         design = list(filter(lambda design : design["id"]==id, designs))[0]
         route_ai=design["ai_url"]
         route_img=design["img_url"]
+        conn.delete_design(id)
         os.remove(route_ai)
         os.remove(route_img)
-        conn.delete_design(id)
         
         return jsonify({"msg":"deleted succesfully"})
     
     except Exception as e:
+        print(e)
         return jsonify({"msg":f"An exception occurred: {e}"})
       
 # ----------------------------------------------------------------------------------------
@@ -236,6 +237,27 @@ def get_user():
                 "last_name":result[2],
                 "phone":result[3],
                 "email":result[4],
+            }
+        )
+    
+    except Exception as e:
+        return jsonify({"msg":f"An exception occurred: {e}"})
+      
+@app.route("/add_user", methods=["POST"])
+def add_user():
+    try:
+        print(f"adding user ",request.get_json()["first_name"])
+        info = request.get_json()
+        print(info)
+        conn = Data_base()
+        result = conn.create(
+                "users",
+                info
+            )
+        
+        return jsonify(
+            {
+                "result":result,
             }
         )
     
