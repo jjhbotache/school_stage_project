@@ -3,6 +3,10 @@ import pymysql
 import os
 import re
 from flask_cors import CORS
+import hashlib
+from send_mail import *
+import random
+
 app = Flask(__name__)
 CORS(app)
 
@@ -216,7 +220,25 @@ def delete_design(id):
         return jsonify({"msg":f"An exception occurred: {e}"})
       
 # ----------------------------------------------------------------------------------------
-# users
+# users & admin
+@app.route("/get_admin", methods=["POST"])
+def get_admin():
+    try:
+        print(f"getting admin ",request.get_json()["id"])
+        credentials = request.get_json()
+        print(credentials)
+        conn = Data_base()
+        result = conn.read(
+                "admins",
+                ["id_user_admin"],
+                f"id_user_admin={credentials['id']}"
+            )[0][0] 
+        
+        return jsonify({"admin":result,})
+    
+    except Exception as e:
+        return jsonify({"msg":f"An exception occurred: {e}"})
+      
 @app.route("/get_user", methods=["POST"])
 def get_user():
     try:
@@ -263,7 +285,52 @@ def add_user():
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
-      
+  
+@app.route("/verify/<string:email>")
+def sendVerificationNumber(email):
+    # try:
+    verification_code = generate_4_random_digits()
+    with open(f'codes/verification_code_for_{email}.bin', 'wb') as f:
+        f.write(str(verification_code).encode())
+    
+    send_mail(
+        email,
+        f"Your verification code is {verification_code}",
+        f"Your verification code is {verification_code}"
+        )
+    
+    return jsonify({"msg":"succesfully :D"})
+    # except:
+    #     return jsonify({"msg":"failed"})
+    
+@app.route("/test/<string:email>/<string:number>")
+def testVerificationNumber(email,number):
+    # try:
+    verification_code = ""
+    with open(f'codes/verification_code_for_{email}.bin', 'rb') as f:
+        verification_code = f.read().decode()
+        if verification_code == number:
+            
+            conn = Data_base()
+            id = conn.read(
+                "users",
+                ["id"],
+                f"email='{email}'"
+            )[0][0]
+            print(id)
+            
+            return jsonify(
+                {
+                    "msg":"succesfully :D",
+                    "hash":""
+                }
+                        )
+        else:
+            return jsonify({"msg":"failed"})
+    
+    # except:
+    #     return jsonify({"msg":"failed"})
+
 # ----------------------------------------------------------------------------------------
 # general managment
 @app.route("/insert/<string:table>",methods=["POST"])
@@ -304,6 +371,20 @@ def delete(table,id):
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 # ----------------------------------------------------------------------------------------
+
+#This is a function that is used to create a hash for a user 
+# def string_to_hash(string):
+#     hash_object = hashlib.sha512(string.encode())
+#     hex_dig = hash_object.hexdigest()
+#     return hex_dig[:255]
+def generate_4_random_digits():
+        digitos = ""
+        for i in range(4):
+            digitos += str(random.randint(0, 9))
+        return digitos
+
+# ----------------------------------------------------------------------------------------
+
 
 if __name__ == "__main__":
     app.run(debug=True,port=1000)
