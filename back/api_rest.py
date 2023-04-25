@@ -3,9 +3,10 @@ import pymysql
 import os
 import re
 from flask_cors import CORS
-import hashlib
 from send_mail import *
+from jwt_functions import *
 import random
+
 
 app = Flask(__name__)
 CORS(app)
@@ -101,7 +102,7 @@ class Data_base:
         self.cursor.execute(query)
         self.connection.commit()
 
-    def read(self, table, columns=[], where=None):
+    def read(self, table, columns:list, where=None):
         columns = ', '.join(columns) if len(columns) > 0 else "*"
         query = f"SELECT {columns} FROM {table}"
         if where:   
@@ -286,22 +287,22 @@ def add_user():
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
   
-@app.route("/verify/<string:email>")
-def sendVerificationNumber(email):
-    # try:
-    verification_code = generate_4_random_digits()
-    with open(f'codes/verification_code_for_{email}.bin', 'wb') as f:
-        f.write(str(verification_code).encode())
+# @app.route("/verify/<string:email>")
+# def sendVerificationNumber(email):
+#     # try:
+#     verification_code = generate_4_random_digits()
+#     with open(f'codes/verification_code_for_{email}.bin', 'wb') as f:
+#         f.write(str(verification_code).encode())
     
-    send_mail(
-        email,
-        f"Your verification code is {verification_code}",
-        f"Your verification code is {verification_code}"
-        )
+#     send_mail(
+#         email,
+#         f"Your verification code is {verification_code}",
+#         f"Your verification code is {verification_code}"
+#         )
     
-    return jsonify({"msg":"succesfully :D"})
-    # except:
-    #     return jsonify({"msg":"failed"})
+#     return jsonify({"msg":"succesfully :D"})
+#     # except:
+#     #     return jsonify({"msg":"failed"})
     
 @app.route("/test/<string:email>/<string:number>")
 def testVerificationNumber(email,number):
@@ -322,7 +323,7 @@ def testVerificationNumber(email,number):
             return jsonify(
                 {
                     "msg":"succesfully :D",
-                    "hash":""
+                    "hash":"-"
                 }
                         )
         else:
@@ -331,6 +332,26 @@ def testVerificationNumber(email,number):
     # except:
     #     return jsonify({"msg":"failed"})
 
+#==============
+
+@app.route("/verify/<string:email>")
+def createTk(email):
+    conn = Data_base()
+    emails = [registry[0] for registry in conn.read("users",["email"])]
+    if email in emails:
+        return create_tk({"email":email})
+    else:
+        return jsonify({"msg":"no exists"})
+    
+@app.route("/test/<string:asked_info>")
+def validateTk(asked_info):
+    try:
+        token = request.headers["auth"]
+        if validate_tk(token):
+            return jsonify({"msg":f"im giving u {asked_info}"})
+    except:
+        return jsonify({"msg":"quien tu ere?"})
+    
 # ----------------------------------------------------------------------------------------
 # general managment
 @app.route("/insert/<string:table>",methods=["POST"])
