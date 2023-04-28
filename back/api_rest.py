@@ -130,73 +130,77 @@ class Data_base:
 # designs
 @app.route("/design", methods=["POST"])
 def save_img():
-    name = request.form["name"]
-    files_name = request.form["filesName"]
-    img = request.files["img"]
-    ai = request.files["ai"]
-    print("name: ",name)
+    if validate_tk(request.headers["auth"]):
+        name = request.form["name"]
+        files_name = request.form["filesName"]
+        img = request.files["img"]
+        ai = request.files["ai"]
+        print("name: ",name)
 
-    route_img = f"img/{files_name}.png"
-    route_ai = f"ai/{files_name}.ai"
+        route_img = f"img/{files_name}.png"
+        route_ai = f"ai/{files_name}.ai"
 
-    if os.path.isfile(route_ai) or os.path.isfile(route_img):
-        return f"file with name {name} already exist"
-    else:
-        try:
-            img.save(route_img)
-            ai.save(route_ai)
-            connection = Data_base()
-            connection.save_design(
-                name,
-                route_img,
-                route_ai
-            )
-            return "Saved succesfully"
-        except Exception as e:
-            return f"Something went wrong {e}"
+        if os.path.isfile(route_ai) or os.path.isfile(route_img):
+            return f"file with name {name} already exist"
+        else:
+            try:
+                img.save(route_img)
+                ai.save(route_ai)
+                connection = Data_base()
+                connection.save_design(
+                    name,
+                    route_img,
+                    route_ai
+                )
+                return "Saved succesfully"
+            except Exception as e:
+                return f"Something went wrong {e}"
 
 @app.route("/design", methods=["GET"])
 def get_designs():
-    connection = Data_base()
-    return jsonify(connection.get_all_designs())
+    if validate_tk(request.headers["auth"]):
+        connection = Data_base()
+        return jsonify(connection.get_all_designs())
 
 @app.route("/<string:kind>/<string:name>")
 def get_file(kind,name):
-    route = f"{kind}/{name}"
-    if kind == "img":
-        return send_file(route, mimetype='image/png')
-    elif kind == "ai":  
-        return send_file(route)
+    if validate_tk(request.headers["auth"]):
+        route = f"{kind}/{name}"
+        if kind == "img":
+            return send_file(route, mimetype='image/png')
+        elif kind == "ai":  
+            return send_file(route)
 
 @app.route("/update_design/<int:id>/<string:field>", methods=["POST"])
 def update_design(id,field):
     try:
-        if field == "name":
-            data = request.get_json()["new_data"]
-            conn = Data_base()
-            conn.update_design(id,field,data)
+        if validate_tk(request.headers["auth"]):
+            if field == "name":
+                data = request.get_json()["new_data"]
+                conn = Data_base()
+                conn.update_design(id,field,data)
+                
+            if field == "img":
+                print("changing img")
+                conn = Data_base()
+                designs = conn.get_all_designs()
+                route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
+                print("changing the img at ",route_img)
+                
+                img = request.files["img"]
+                os.remove(route_img)
+                img.save(route_img)
             
-        if field == "img":
-            print("changing img")
-            conn = Data_base()
-            designs = conn.get_all_designs()
-            route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
-            print("changing the img at ",route_img)
+            if field == "ai":
+                print("changing img")
+                conn = Data_base()
+                designs = conn.get_all_designs()
+                route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
+                ai = request.files["ai"]
+                os.remove(route_ai)
+                ai.save(route_ai)
             
-            img = request.files["img"]
-            os.remove(route_img)
-            img.save(route_img)
-        
-        if field == "ai":
-            print("changing img")
-            conn = Data_base()
-            designs = conn.get_all_designs()
-            route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
-            ai = request.files["ai"]
-            os.remove(route_ai)
-            ai.save(route_ai)
-        
-        return jsonify({"msg":"updated succesfully"})
+            return jsonify({"msg":"updated succesfully"})
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
@@ -204,17 +208,18 @@ def update_design(id,field):
 @app.route("/delete_design/<int:id>", methods=["DELETE"])
 def delete_design(id):
     try:
-        print(f"DELETING design with id: {id}")
-        conn = Data_base()
-        designs = conn.get_all_designs()
-        design = list(filter(lambda design : design["id"]==id, designs))[0]
-        route_ai=design["ai_url"]
-        route_img=design["img_url"]
-        conn.delete_design(id)
-        os.remove(route_ai)
-        os.remove(route_img)
-        
-        return jsonify({"msg":"deleted succesfully"})
+        if validate_tk(request.headers["auth"]):
+            print(f"DELETING design with id: {id}")
+            conn = Data_base()
+            designs = conn.get_all_designs()
+            design = list(filter(lambda design : design["id"]==id, designs))[0]
+            route_ai=design["ai_url"]
+            route_img=design["img_url"]
+            conn.delete_design(id)
+            os.remove(route_ai)
+            os.remove(route_img)
+            
+            return jsonify({"msg":"deleted succesfully"})
     
     except Exception as e:
         print(e)
@@ -252,7 +257,7 @@ def get_user():
                 [], #all
                 f"id={credentials['id']} AND phone = {credentials['phone']}"
             )[0]
-        
+        print(result)
         return jsonify(
             {
                 "id":result[0],
@@ -260,6 +265,7 @@ def get_user():
                 "last_name":result[2],
                 "phone":result[3],
                 "email":result[4],
+                "password":"-" if result[5] else None,
             }
         )
     
@@ -287,59 +293,45 @@ def add_user():
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
   
-# @app.route("/verify/<string:email>")
-# def sendVerificationNumber(email):
+    
+# @app.route("/test/<string:email>/<string:number>")
+# def testVerificationNumber(email,number):
 #     # try:
-#     verification_code = generate_4_random_digits()
-#     with open(f'codes/verification_code_for_{email}.bin', 'wb') as f:
-#         f.write(str(verification_code).encode())
+#     verification_code = ""
+#     with open(f'codes/verification_code_for_{email}.bin', 'rb') as f:
+#         verification_code = f.read().decode()
+#         if verification_code == number:
+            
+#             conn = Data_base()
+#             id = conn.read(
+#                 "users",
+#                 ["id"],
+#                 f"email='{email}'"
+#             )[0][0]
+#             print(id)
+            
+#             return jsonify(
+#                 {
+#                     "msg":"succesfully :D",
+#                     "hash":"-"
+#                 }
+#                         )
+#         else:
+#             return jsonify({"msg":"failed"})
     
-#     send_mail(
-#         email,
-#         f"Your verification code is {verification_code}",
-#         f"Your verification code is {verification_code}"
-#         )
-    
-#     return jsonify({"msg":"succesfully :D"})
 #     # except:
 #     #     return jsonify({"msg":"failed"})
-    
-@app.route("/test/<string:email>/<string:number>")
-def testVerificationNumber(email,number):
-    # try:
-    verification_code = ""
-    with open(f'codes/verification_code_for_{email}.bin', 'rb') as f:
-        verification_code = f.read().decode()
-        if verification_code == number:
-            
-            conn = Data_base()
-            id = conn.read(
-                "users",
-                ["id"],
-                f"email='{email}'"
-            )[0][0]
-            print(id)
-            
-            return jsonify(
-                {
-                    "msg":"succesfully :D",
-                    "hash":"-"
-                }
-                        )
-        else:
-            return jsonify({"msg":"failed"})
-    
-    # except:
-    #     return jsonify({"msg":"failed"})
 
 #==============
 
-@app.route("/verify/<string:email>")
+@app.route("/verify/<string:email>",methods=["POST"])
 def createTk(email):
     conn = Data_base()
-    emails = [registry[0] for registry in conn.read("users",["email"])]
-    if email in emails:
-        return create_tk({"email":email})
+    password = request.get_json()["password"]
+    if password == (conn.read("users",["password"],f"email = '{email}' ")[0][0]):
+        
+        token_obj = create_tk({"password":password})
+        return token_obj
     else:
         return jsonify({"msg":"no exists"})
     
@@ -357,54 +349,47 @@ def validateTk(asked_info):
 @app.route("/insert/<string:table>",methods=["POST"])
 def insert(table):
     try:
-        conn = Data_base()
-        data = request.get_json()
-        conn.create(table,data)
-        return jsonify({"msg":f"created succesfully"})
+        if validate_tk(request.headers["auth"]):
+            conn = Data_base()
+            data = request.get_json()
+            conn.create(table,data)
+            return jsonify({"msg":f"created succesfully"})
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 @app.route("/read/<string:table>")
 def read(table):
     try:
-        conn = Data_base()
-        return jsonify(conn.read(table))
+        if validate_tk(request.headers["auth"]):
+            conn = Data_base()
+            return jsonify(conn.read(table))
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 @app.route("/update/<string:table>/<int:id>",methods=["PUT"])
 def update(table,id):
     try:
-        conn = Data_base()
-        data = request.get_json()
-        conn.update(table,data,f'id={id}')
-        return jsonify({"msg":"updated successfully"})
+        if validate_tk(request.headers["auth"]):
+            conn = Data_base()
+            data = request.get_json()
+            conn.update(table,data,f'id={id}')
+            return jsonify({"msg":"updated successfully"})
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 @app.route("/delete/<string:table>/<int:id>",methods=["DELETE"])
 def delete(table,id):
     try:
-        conn = Data_base()
-        conn.delete(table,f'id={id}')
-        return jsonify({"msg":"deleted successfully"})
+        if validate_tk(request.headers["auth"]):
+            conn = Data_base()
+            conn.delete(table,f'id={id}')
+            return jsonify({"msg":"deleted successfully"})
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 # ----------------------------------------------------------------------------------------
 
-#This is a function that is used to create a hash for a user 
-# def string_to_hash(string):
-#     hash_object = hashlib.sha512(string.encode())
-#     hex_dig = hash_object.hexdigest()
-#     return hex_dig[:255]
-def generate_4_random_digits():
-        digitos = ""
-        for i in range(4):
-            digitos += str(random.randint(0, 9))
-        return digitos
 
-# ----------------------------------------------------------------------------------------
 
 
 if __name__ == "__main__":
