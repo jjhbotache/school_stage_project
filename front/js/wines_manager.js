@@ -1,4 +1,7 @@
 import importElement from "/front/js/modules/elementImporter.js";
+import { redirectNoAdmin } from "./modules/globalVars.js";
+
+redirectNoAdmin()
 
 let element;
 let inputWine;
@@ -64,7 +67,9 @@ function loadWines(select) {
   })
   .catch(e=>{
     console.log(e);
-    loadWines(select);
+    setTimeout(() => {
+      loadWines(select);
+    }, 3000);
   })
 }
 

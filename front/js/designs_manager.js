@@ -1,4 +1,9 @@
 import importElement from "/front/js/modules/elementImporter.js";
+import { redirectNoAdmin } from "./modules/globalVars.js";
+import { setRequestConfig } from "./modules/globalVars.js";
+
+redirectNoAdmin()
+
 
 const btnSave = document.getElementById("btn-save");
 const btnUpdate = document.getElementById("btn-update");
@@ -21,27 +26,30 @@ const designViewTemplate = document.createElement("template");
 btnSave.addEventListener("click",()=>{
   if (inputName.value==""){
     alert("Please enter a name");
-  }else if (inputImg.files[0].lenght>0) {
+  }else if (inputImg.files[0].length>0) {
     alert("Please enter an Img");
-  }else if (inputAi.files[0].lenght>0) {
+  }else if (inputAi.files[0].length>0) {
     alert("Please enter an Ai");
   }else{
     sendDesign(inputName.value,realName.textContent, inputImg.files[0], inputAi.files[0]);
   }
 })
+
 inputName.addEventListener("input",()=>{
   updateRealName();
 });
+
 inputImg.addEventListener('change',()=>{
   const fileName = inputImg.files[0].name;
   inputName.value = fileName.substring(0, fileName.lastIndexOf("."));
   const reader = new FileReader();
   reader.onloadend = () => {preview.src = reader.result};
   reader.readAsDataURL(inputImg.files[0])
-
+  
   preview.src = inputImg.files[0]
   updateRealName();
 });
+
 
 // =========================================================================================
 
@@ -55,14 +63,12 @@ function sendDesign(name,filesName,img,ai) {
   console.log(`sending=`,data);  
   fetch(
     "http://localhost:1000/design",
-    {
-      method:"POST",
-      body:data
-    }
+    setRequestConfig("POST",data,true)
   )
   .then(respuesta=>respuesta.text())
   .then(data=>{
     alert(data);
+    window.location.reload();
   })
   .catch(e=>{
     alert("somethig went wrong:",e);
@@ -70,7 +76,11 @@ function sendDesign(name,filesName,img,ai) {
 }
 
 function loadDesigns() {
-  fetch('http://127.0.0.1:1000/design')
+  fetch('http://127.0.0.1:1000/design',{
+    headers : { 
+      auth:localStorage.getItem("token")
+    }
+  })
     .then(response => response.json())
     .then(data => {
       document.getElementById("designs").classList.remove("d-none")
@@ -138,7 +148,10 @@ function createView(name) {
     };
     if (e.target.id === "delete") {
       if (confirm(`Do you want do delete "${design.name}" design?`)) {
-        fetch(apiRoute+"delete_design/"+design.id.toString(),{method:"DELETE"})
+        fetch(
+          apiRoute+"delete_design/"+design.id.toString(),
+          setRequestConfig("DELETE",undefined,true)
+        )
         .then((response) => {
           response.json()
         })
@@ -193,7 +206,10 @@ async function updateDesign(name) {
     fetch(`http://127.0.0.1:1000/update_design/${design.id}/ai`,
     {
       method: 'POST',
-      body:data
+      body:data,
+      headers : { 
+        auth:localStorage.getItem("token")
+      }
     })
     .then(response => response.json())
     .then((data) => {console.log(data);})  
@@ -208,7 +224,10 @@ async function updateDesign(name) {
     fetch(`http://127.0.0.1:1000/update_design/${design.id}/img`,
     {
       method: 'POST',
-      body:data
+      body:data,
+      headers : { 
+        auth:localStorage.getItem("token")
+      }
     })
     .then(response => response.json())
     .then((data) => {console.log(data);})  
@@ -216,18 +235,10 @@ async function updateDesign(name) {
   }
   if (inputName.value != design.name) {
     console.log(`Changing name from ${design.name} to ${inputName.value}`);
-    fetch(`http://127.0.0.1:1000/update_design/${design.id}/name`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body:JSON.stringify(
-        {
-          new_data:inputName.value
-        }
-      )
-    })
+    fetch(
+      `http://127.0.0.1:1000/update_design/${design.id}/name`,
+      setRequestConfig("POST",JSON.stringify({new_data:inputName.value}))
+    )
     .then(response => response.json())
     .then((data) => {console.log(data);})  
     .catch(error => console.log(error));
