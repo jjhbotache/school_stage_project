@@ -5,8 +5,21 @@ import re
 from flask_cors import CORS
 from send_mail import *
 from jwt_functions import *
-import random
+from functools import wraps
 
+
+#------------
+# locker decorator
+def locked_route(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if validate_tk(request.headers["auth"]):
+            return func(*args, **kwargs)
+        else:
+            raise Exception
+    return wrapper
+
+#------------
 
 app = Flask(__name__)
 CORS(app)
@@ -129,97 +142,101 @@ class Data_base:
 # ----------------------------------------------------------------------------------------
 # designs
 @app.route("/design", methods=["POST"])
+@locked_route
 def save_img():
-    if validate_tk(request.headers["auth"]):
-        name = request.form["name"]
-        files_name = request.form["filesName"]
-        img = request.files["img"]
-        ai = request.files["ai"]
-        print("name: ",name)
+    name = request.form["name"]
+    files_name = request.form["filesName"]
+    img = request.files["img"]
+    ai = request.files["ai"]
+    print("name: ",name)
 
-        route_img = f"img/{files_name}.png"
-        route_ai = f"ai/{files_name}.ai"
+    route_img = f"img/{files_name}.png"
+    route_ai = f"ai/{files_name}.ai"
 
-        if os.path.isfile(route_ai) or os.path.isfile(route_img):
-            return f"file with name {name} already exist"
-        else:
-            try:
-                img.save(route_img)
-                ai.save(route_ai)
-                connection = Data_base()
-                connection.save_design(
-                    name,
-                    route_img,
-                    route_ai
-                )
-                return "Saved succesfully"
-            except Exception as e:
-                return f"Something went wrong {e}"
+    if os.path.isfile(route_ai) or os.path.isfile(route_img):
+        return f"file with name {name} already exist"
+    else:
+        try:
+            img.save(route_img)
+            ai.save(route_ai)
+            connection = Data_base()
+            connection.save_design(
+                name,
+                route_img,
+                route_ai
+            )
+            return "Saved succesfully"
+        except Exception as e:
+            return f"Something went wrong {e}"
 
 @app.route("/design", methods=["GET"])
 def get_designs():
-    if validate_tk(request.headers["auth"]):
-        connection = Data_base()
-        return jsonify(connection.get_all_designs())
+    connection = Data_base()
+    return jsonify(connection.get_all_designs())
 
 @app.route("/<string:kind>/<string:name>")
+# it's locked just for Ai files
 def get_file(kind,name):
-    if validate_tk(request.headers["auth"]):
-        route = f"{kind}/{name}"
-        if kind == "img":
-            return send_file(route, mimetype='image/png')
-        elif kind == "ai":  
-            return send_file(route)
-
+    route = f"{kind}/{name}"
+    if kind == "img":
+        return send_file(route, mimetype='image/png')
+    elif kind == "ai":  
+        try:
+            if validate_tk(request.headers["auth"]):
+                return send_file(route)
+        except:
+            return jsonify({"msg": "Unauthorized"}), 401
 @app.route("/update_design/<int:id>/<string:field>", methods=["POST"])
+@locked_route
 def update_design(id,field):
+    print("working endpoint")
     try:
-        if validate_tk(request.headers["auth"]):
-            if field == "name":
-                data = request.get_json()["new_data"]
-                conn = Data_base()
-                conn.update_design(id,field,data)
-                
-            if field == "img":
-                print("changing img")
-                conn = Data_base()
-                designs = conn.get_all_designs()
-                route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
-                print("changing the img at ",route_img)
-                
-                img = request.files["img"]
-                os.remove(route_img)
-                img.save(route_img)
+        print("working endpoint")
+        if field == "name":
+            data = request.get_json()["new_data"]
+            conn = Data_base()
+            conn.update_design(id,field,data)
             
-            if field == "ai":
-                print("changing img")
-                conn = Data_base()
-                designs = conn.get_all_designs()
-                route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
-                ai = request.files["ai"]
-                os.remove(route_ai)
-                ai.save(route_ai)
+        if field == "img":
+            print("changing img")
+            conn = Data_base()
+            designs = conn.get_all_designs()
+            route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
+            print("changing the img at ",route_img)
             
-            return jsonify({"msg":"updated succesfully"})
+            img = request.files["img"]
+            os.remove(route_img)
+            img.save(route_img)
+        
+        if field == "ai":
+            print("changing img")
+            conn = Data_base()
+            designs = conn.get_all_designs()
+            route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
+            ai = request.files["ai"]
+            os.remove(route_ai)
+            ai.save(route_ai)
+        
+        return jsonify({"msg":"updated succesfully"})
     
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
     
 @app.route("/delete_design/<int:id>", methods=["DELETE"])
+@locked_route
 def delete_design(id):
     try:
-        if validate_tk(request.headers["auth"]):
-            print(f"DELETING design with id: {id}")
-            conn = Data_base()
-            designs = conn.get_all_designs()
-            design = list(filter(lambda design : design["id"]==id, designs))[0]
-            route_ai=design["ai_url"]
-            route_img=design["img_url"]
-            conn.delete_design(id)
-            os.remove(route_ai)
-            os.remove(route_img)
-            
-            return jsonify({"msg":"deleted succesfully"})
+        print(f"DELETING design with id: {id}")
+        conn = Data_base()
+        designs = conn.get_all_designs()
+        design = list(filter(lambda design : design["id"]==id, designs))[0]
+        route_ai=design["ai_url"]
+        route_img=design["img_url"]
+        conn.delete_design(id)
+        os.remove(route_ai)
+        os.remove(route_img)
+        
+        return jsonify({"msg":"deleted succesfully"})
     
     except Exception as e:
         print(e)
@@ -293,35 +310,6 @@ def add_user():
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
   
-    
-# @app.route("/test/<string:email>/<string:number>")
-# def testVerificationNumber(email,number):
-#     # try:
-#     verification_code = ""
-#     with open(f'codes/verification_code_for_{email}.bin', 'rb') as f:
-#         verification_code = f.read().decode()
-#         if verification_code == number:
-            
-#             conn = Data_base()
-#             id = conn.read(
-#                 "users",
-#                 ["id"],
-#                 f"email='{email}'"
-#             )[0][0]
-#             print(id)
-            
-#             return jsonify(
-#                 {
-#                     "msg":"succesfully :D",
-#                     "hash":"-"
-#                 }
-#                         )
-#         else:
-#             return jsonify({"msg":"failed"})
-    
-#     # except:
-#     #     return jsonify({"msg":"failed"})
-
 #==============
 
 @app.route("/verify/<string:email>",methods=["POST"])
@@ -331,59 +319,58 @@ def createTk(email):
     if password == (conn.read("users",["password"],f"email = '{email}' ")[0][0]):
         
         token_obj = create_tk({"password":password})
-        return token_obj
+        print(token_obj)
+        print(type(token_obj))
+        return jsonify({"tk":token_obj})
     else:
         return jsonify({"msg":"no exists"})
     
-@app.route("/test/<string:asked_info>")
-def validateTk(asked_info):
-    try:
-        token = request.headers["auth"]
-        if validate_tk(token):
-            return jsonify({"msg":f"im giving u {asked_info}"})
-    except:
-        return jsonify({"msg":"quien tu ere?"})
+@app.route("/test")
+@locked_route
+def validateTk():
+    return jsonify({"msg":"good"})
+    
     
 # ----------------------------------------------------------------------------------------
 # general managment
 @app.route("/insert/<string:table>",methods=["POST"])
+@locked_route
 def insert(table):
     try:
-        if validate_tk(request.headers["auth"]):
-            conn = Data_base()
-            data = request.get_json()
-            conn.create(table,data)
-            return jsonify({"msg":f"created succesfully"})
+        conn = Data_base()
+        data = request.get_json()
+        conn.create(table,data)
+        return jsonify({"msg":f"created succesfully"})
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 @app.route("/read/<string:table>")
+@locked_route
 def read(table):
     try:
-        if validate_tk(request.headers["auth"]):
-            conn = Data_base()
-            return jsonify(conn.read(table))
+        conn = Data_base()
+        return jsonify(conn.read(table))
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 @app.route("/update/<string:table>/<int:id>",methods=["PUT"])
+@locked_route
 def update(table,id):
     try:
-        if validate_tk(request.headers["auth"]):
-            conn = Data_base()
-            data = request.get_json()
-            conn.update(table,data,f'id={id}')
-            return jsonify({"msg":"updated successfully"})
+        conn = Data_base()
+        data = request.get_json()
+        conn.update(table,data,f'id={id}')
+        return jsonify({"msg":"updated successfully"})
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 @app.route("/delete/<string:table>/<int:id>",methods=["DELETE"])
+@locked_route
 def delete(table,id):
     try:
-        if validate_tk(request.headers["auth"]):
-            conn = Data_base()
-            conn.delete(table,f'id={id}')
-            return jsonify({"msg":"deleted successfully"})
+        conn = Data_base()
+        conn.delete(table,f'id={id}')
+        return jsonify({"msg":"deleted successfully"})
     except Exception as e:
         return jsonify({"msg":f"An error ocurred: {e}"})
  
