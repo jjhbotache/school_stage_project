@@ -1,6 +1,6 @@
-import importElement from "/front/js/modules/elementImporter.js";
 import { redirectNoAdmin } from "./modules/globalVars.js";
 import { setRequestConfig } from "./modules/globalVars.js";
+import { apiRoute } from "./modules/globalVars.js";
 
 redirectNoAdmin()
 
@@ -46,7 +46,6 @@ inputImg.addEventListener('change',()=>{
   reader.onloadend = () => {preview.src = reader.result};
   reader.readAsDataURL(inputImg.files[0])
   
-  preview.src = inputImg.files[0]
   updateRealName();
 });
 
@@ -131,12 +130,11 @@ function createView(name) {
     designViewTemplate.content,
     true
   );
-  const apiRoute = "http://127.0.0.1:1000/";
   const id = removeAfterDot(design.name);
   const all = newView.querySelector(".floating-card");
   all.id = id;
-  newView.getElementById("img").src = apiRoute + design.img_url;
-  newView.getElementById("download-ai").href = apiRoute + design.ai_url;
+  newView.getElementById("img").src = apiRoute + design.img_url + "/-";
+  newView.getElementById("download-ai").href = apiRoute + design.ai_url + "/" + localStorage.getItem("token");
   newView.getElementById("img-name").textContent = design.name;
 
   newView.querySelector(".floating-card").addEventListener('click', (e)=>{
@@ -189,7 +187,7 @@ async function updateDesign(name) {
   const design = designs.find(design => design.name === name);
   inputName.value = design.name
   updateRealName()
-  preview.src = 'http://127.0.0.1:1000/'+design.img_url;
+  preview.src = apiRoute+design.img_url+"/-";
  
   document.getElementById("title").textContent = "Edit your design"
   btnSave.classList.add("d-none");
@@ -202,8 +200,8 @@ async function updateDesign(name) {
   
     const data = new FormData();
     data.append("ai",inputAi.files[0])
-  
-    fetch(`http://127.0.0.1:1000/update_design/${design.id}/ai`,
+    console.log(data);
+    fetch(`${apiRoute}update_design/${design.id}/ai`,
     {
       method: 'POST',
       body:data,
@@ -221,7 +219,7 @@ async function updateDesign(name) {
     const data = new FormData();
     data.append("img",inputImg.files[0])
 
-    fetch(`http://127.0.0.1:1000/update_design/${design.id}/img`,
+    fetch(`${apiRoute}update_design/${design.id}/img`,
     {
       method: 'POST',
       body:data,
@@ -236,11 +234,11 @@ async function updateDesign(name) {
   if (inputName.value != design.name) {
     console.log(`Changing name from ${design.name} to ${inputName.value}`);
     fetch(
-      `http://127.0.0.1:1000/update_design/${design.id}/name`,
-      setRequestConfig("POST",JSON.stringify({new_data:inputName.value}))
+      `${apiRoute}update_design/${design.id}/name`,
+      setRequestConfig("POST",JSON.stringify({new_data:`"${inputName.value}"`}))
     )
     .then(response => response.json())
-    .then((data) => {console.log(data);})  
+    .then((data) => console.log(data))  
     .catch(error => console.log(error));
   }
 

@@ -1,5 +1,6 @@
 import importElement from "/front/js/modules/elementImporter.js";
 import { redirectNoAdmin } from "./modules/globalVars.js";
+import { setRequestConfig } from "./modules/globalVars.js";
 
 redirectNoAdmin()
 
@@ -26,13 +27,7 @@ importElement("templates/manager.html")
 
   btnAdd.addEventListener('click', ()=>{
     if (inputWine.value != "") {
-      fetch(`http://127.0.0.1:1000/insert/wine_kinds`,{
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          },
-        body: JSON.stringify({name:`"${inputWine.value}"`})
-      })
+      fetch(`http://127.0.0.1:1000/insert/wine_kinds`,setRequestConfig("POST",JSON.stringify({name:`"${inputWine.value}"`})))
       .then(response => response.json())
       .then(msg => {console.log(msg);location.reload();})
       .catch(err => console.log(err));
@@ -51,7 +46,7 @@ importElement("templates/manager.html")
 
 function loadWines(select) {
   console.log("trying to get wines");
-  fetch("http://127.0.0.1:1000/read/wine_kinds")
+  fetch("http://127.0.0.1:1000/read/wine_kinds",{method:"GET",headers:{auth:localStorage.getItem("token")}})
   .then(response=>response.json())
   .then(json=>{
     console.log(json);
@@ -90,12 +85,7 @@ function optionAction(id,name) {
 
 
 function updateWine(id,newName) {
-  fetch(`http://127.0.0.1:1000/update/wine_kinds/${id}`,
-  {
-    method:"PUT",
-    headers:{'Content-Type': 'application/json'},
-    body:JSON.stringify({name:`"${newName}"`})
-  })
+  fetch(`http://127.0.0.1:1000/update/wine_kinds/${id}`,setRequestConfig("PUT",JSON.stringify({name:`"${newName}"`})))
   .then(response=>response.json())
   .then((value) => {console.log(value);location.reload();})
   .catch((value) => {console.log(value);})
@@ -103,7 +93,7 @@ function updateWine(id,newName) {
 
 function DeleteWine(id) {
   if (confirm(`Are you sure do you want to delete to ${inputWine.value} wine?`)) {
-    fetch(`http://127.0.0.1:1000/delete/wine_kinds/${id}`,{method:"DELETE"})
+    fetch(`http://127.0.0.1:1000/delete/wine_kinds/${id}`,setRequestConfig("DELETE"))
     .then(response=>response.json())
     .then((value) => {console.log(value);location.reload();})
     .catch((value) => {console.log(value);})

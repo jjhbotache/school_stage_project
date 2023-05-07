@@ -17,7 +17,7 @@ importElement("templates/navbar.html")
     `;
     element.getElementById("logout").addEventListener('click', ()=>{logout();})
   }
-  else{
+  else{ 
     logMenu.innerHTML += `
     <a class="nav-link" href="login.html">login</a>
     `;

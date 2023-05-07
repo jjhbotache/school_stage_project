@@ -2,12 +2,13 @@
   <div class="row d-flex justify-content-center">
     <div class="col-12 col-md-6 ">
       <h2 id="manager-title" onclick="location.reload();">manager title</h2>
-
-      <input class="form-control" type="text" placeholder="add a wine" id="input-manager">
-      <button id="btn-add" class="btn btn-warning rounded-circle d-block mx-auto m-2">+</button>
-      <button id="btn-update" class="btn btn-success rounded-pill d-block mx-auto m-2 d-none">update</button>
-      <button id="btn-delete" class="btn btn-danger rounded-pill d-block mx-auto m-2 d-none">delete</button>
-
+      <div id="inputs">
+        <input class="form-control" type="text" placeholder="add a wine" id="input-manager">
+        <button id="btn-add" class="btn btn-warning rounded-circle d-block mx-auto m-2">+</button>
+        <button id="btn-update" class="btn btn-success rounded-pill d-block mx-auto m-2 d-none">update</button>
+        <button id="btn-delete" class="btn btn-danger rounded-pill d-block mx-auto m-2 d-none">delete</button>
+      </div>
+        <hr>
       <div class="form-group d-flex flex-column" id="read-window">
         <label >title for reader window</label>
         <select class="form-control d-none" multiple></select>

@@ -11,12 +11,14 @@ body{
       manager styles
   --------------------- */
 #read-window select{
-  height: 50vh;
+  max-height: 50vh;
 }
 /* --------------------- */
-/* --------------------- 
-      navbar styles
-  --------------------- */
+/* --------------------- navbar styles --------------------- */
+.nav-item{
+  margin: 0 1em;
+  font-size: 0.7em;
+}
 .navbar-title{
   font-size: 2em;
 }
@@ -27,13 +29,14 @@ body{
 }
 .nav-link {
   color:var(--primary) !important; 
+  margin: 0 0;
 }
 .nav-link:hover {
   filter:opacity(0.7) ; 
 }
 #log-stat{
   margin-left: auto;
-  margin-right: 2em;
+  /* margin-right: 2em; */
 }
 #log-stat span{
   color: var(--secondary) !important;

@@ -1,4 +1,5 @@
 export const userInfoKeys = ["id", "first_name", "last_name", "phone", "email"];
+export const apiRoute = "http://localhost:1000/";
 
 
 export function checkLocalStorageItems(items) {
@@ -17,7 +18,7 @@ export function checkLocalStorageItems(items) {
   }
   
   // Todos los items están almacenados en el localStorage
-  console.log("Todos los items están almacenados en el localStorage.");
+  // console.log("Todos los items están almacenados en el localStorage.");
   return true;
 }
 
@@ -28,8 +29,8 @@ export function redirectNoAdmin() {
   // console.log(bytes); // Imprime un objeto Uint8Array con los bytes correspondientes a la cadena
   
   const token = localStorage.getItem("token");
-  console.log(token);
-  console.log(typeof token);
+  // console.log(token);
+  // console.log(typeof token);
   fetch("http://127.0.0.1:1000/test",
   {
     method : "GET",
@@ -65,6 +66,6 @@ export function setRequestConfig(methodGotten="GET",bodyGotten,jsonFalse=false) 
   
   config.headers = headers;
 
-  console.log(config);
+  // console.log(config);
   return config;
 }

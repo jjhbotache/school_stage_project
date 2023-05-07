@@ -8,31 +8,33 @@ if (!checkLocalStorageItems(userInfoKeys)) {
 if (!localStorage.getItem("password")) {
   window.location.assign("dashboard.html"); 
 }else{
-  let password =  prompt("Introduzca su contraseña de admin");
-  fetch(`http://localhost:1000/verify/${localStorage.getItem("email")}`,
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-      },
-    body: JSON.stringify({
-      "password": password
-      })
-  }).then((response) => response.json())
-  .then((data) => {
-    console.log(data);
-    console.log(data.tk);
-    console.log(typeof data.tk);
-    localStorage.setItem("token",data.tk);
-    console.log(localStorage.getItem("token"));
-  })
-  .catch(e=>{
-    console.log(e);
-    alert("couldn't reconize you: ");
-    alert(e);
-    localStorage.clear();
-    window.location.assign("login.html");
-  })
+  if (!localStorage.getItem("token")) {
+    let password =  prompt("Introduzca su contraseña de admin");
+    fetch(`http://localhost:1000/verify/${localStorage.getItem("email")}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        },
+      body: JSON.stringify({
+        "password": password
+        })
+    }).then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+      console.log(data.tk);
+      console.log(typeof data.tk);
+      localStorage.setItem("token",data.tk);
+      console.log(localStorage.getItem("token"));
+    })
+    .catch(e=>{
+      console.log(e);
+      alert("couldn't reconize you: ");
+      alert(e);
+      localStorage.clear();
+      window.location.assign("login.html");
+    })
+  }
 
   // fetch("http://localhost:1000/getNumberUsers",{ 
   //   headers:{

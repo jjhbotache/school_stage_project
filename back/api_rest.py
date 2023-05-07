@@ -61,6 +61,22 @@ class Data_base:
           print('An exception occurred: ',e)
           return False
         
+    def save_real_design(self,name,img_route,dxf_route):
+        try:
+            self.cursor.execute(f"""
+                                INSERT INTO real_designs(name,img,dxf)
+                                VALUES(
+                                    "{name}",
+                                    "{img_route}",
+                                    "{dxf_route}"
+                                )
+                                """)
+            self.connection.commit()
+            return True
+        except Exception as e:
+          print('An exception occurred: ',e)
+          return False
+        
     def get_all_designs(self):
         try:
             self.cursor.execute(f"""
@@ -84,25 +100,64 @@ class Data_base:
             print('An exception occurred: ',e)
             return False
       
+    def get_all_real_designs(self):
+        try:
+            self.cursor.execute(f"""
+                                SELECT name,img,dxf,id FROM real_designs
+                                """)
+            data = self.cursor.fetchall()
+            print(data)
+            formated_data = []
+            os.system("cls")
+            for row in data:
+                formated_data.append(
+                    {
+                        "name":row[0],
+                        "img_url":row[1],
+                        "dxf_url":row[2],
+                        "id": row[3],
+                    }
+                )
+            return formated_data
+        except Exception as e:
+            print('An exception occurred: ',e)
+            return False
+      
     def update_design(self,id,field,new_data):
         assert field in ["name","img","ai"]
         self.cursor.execute(f"""
                             UPDATE designs
-                            SET {field} = "{new_data}"
-                            WHERE id_designs = {id}
+                            SET {field} = {new_data}
+                            WHERE id = {id}
                             """)
         self.connection.commit()
-
+ 
+    def update_real_design(self,id,field,new_data):
+        assert field in ["name","img","dxf"]
+        self.cursor.execute(f"""
+                            UPDATE real_designs
+                            SET {field} = {new_data}
+                            WHERE id = {id}
+                            """)
+        self.connection.commit()
+ 
     def delete_design(self,id):
         self.cursor.execute(f"""
-                            DELETE FROM DESIGNS
+                            DELETE FROM designs
+                            WHERE id = {id}
+                            """)
+        self.connection.commit()
+        
+    def delete_real_design(self,id):
+        self.cursor.execute(f"""
+                            DELETE FROM real_designs
                             WHERE id = {id}
                             """)
         self.connection.commit()
 
     #CRUD
     
-    def create(self, table, data):
+    def create(self, table, data:dict):
         
         columns = data.keys()
         query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ("
@@ -115,7 +170,7 @@ class Data_base:
         self.cursor.execute(query)
         self.connection.commit()
 
-    def read(self, table, columns:list, where=None):
+    def read(self, table, columns=[], where=None):
         columns = ', '.join(columns) if len(columns) > 0 else "*"
         query = f"SELECT {columns} FROM {table}"
         if where:   
@@ -143,7 +198,7 @@ class Data_base:
 # designs
 @app.route("/design", methods=["POST"])
 @locked_route
-def save_img():
+def save_design():
     name = request.form["name"]
     files_name = request.form["filesName"]
     img = request.files["img"]
@@ -169,58 +224,104 @@ def save_img():
         except Exception as e:
             return f"Something went wrong {e}"
 
+@app.route("/real_design", methods=["POST"])
+@locked_route
+def save_real_design():
+    name = request.form["name"]
+    files_name = request.form["filesName"]
+    img = request.files["img"]
+    dxf = request.files["dxf"]
+    print("name: ",name)
+    print("files_name: ",files_name)
+
+    route_img = f"img/{files_name}.png"
+    route_dxf = f"dxf/{files_name}.dxf"
+
+    if os.path.isfile(route_dxf) or os.path.isfile(route_img):
+        return f"file with name {name} already exist"
+    else:
+        try:
+            img.save(route_img)
+            dxf.save(route_dxf)
+            connection = Data_base()
+            connection.save_real_design(
+                name,
+                route_img,
+                route_dxf
+            )
+            return "Saved succesfully"
+        except Exception as e:
+            return f"Something went wrong {e}"
+
 @app.route("/design", methods=["GET"])
 def get_designs():
     connection = Data_base()
-    return jsonify(connection.get_all_designs())
-
-@app.route("/<string:kind>/<string:name>")
-# it's locked just for Ai files
-def get_file(kind,name):
-    route = f"{kind}/{name}"
-    if kind == "img":
-        return send_file(route, mimetype='image/png')
-    elif kind == "ai":  
-        try:
-            if validate_tk(request.headers["auth"]):
-                return send_file(route)
-        except:
-            return jsonify({"msg": "Unauthorized"}), 401
+    return jsonify(connection.get_all_designs())      
+        
 @app.route("/update_design/<int:id>/<string:field>", methods=["POST"])
 @locked_route
 def update_design(id,field):
-    print("working endpoint")
-    try:
-        print("working endpoint")
-        if field == "name":
-            data = request.get_json()["new_data"]
-            conn = Data_base()
-            conn.update_design(id,field,data)
-            
-        if field == "img":
-            print("changing img")
-            conn = Data_base()
-            designs = conn.get_all_designs()
-            route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
-            print("changing the img at ",route_img)
-            
-            img = request.files["img"]
-            os.remove(route_img)
-            img.save(route_img)
+    if field == "name":
+        data = request.get_json()["new_data"]
+        conn = Data_base()
+        conn.update_design(id,field,data)
         
-        if field == "ai":
-            print("changing img")
-            conn = Data_base()
-            designs = conn.get_all_designs()
-            route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
-            ai = request.files["ai"]
-            os.remove(route_ai)
-            ai.save(route_ai)
+    if field == "img":
+        print("changing img")
+        conn = Data_base()
+        designs = conn.get_all_designs()
+        route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
+        print("changing the img at ",route_img)
         
-        return jsonify({"msg":"updated succesfully"})
+        img = request.files["img"]
+        os.remove(route_img)
+        img.save(route_img)
     
-    except Exception as e:
-        return jsonify({"msg":f"An exception occurred: {e}"})
+    if field == "ai":
+        print("changing img")
+        conn = Data_base()
+        designs = conn.get_all_designs()
+        route_ai = list(filter(lambda design : design["id"]==id, designs))[0]["ai_url"]
+        ai = request.files["ai"]
+        os.remove(route_ai)
+        ai.save(route_ai)
+    # try:
+    #     return jsonify({"msg":"updated succesfully"})    
+    # except Exception as e:
+    #     return jsonify({"msg":f"An exception occurred: {e}"})
+    
+@app.route("/update_real_design/<int:id>/<string:field>", methods=["POST"])
+@locked_route
+def update_real_design(id,field):
+    if field == "name":
+        data = request.get_json()["new_data"]
+        conn = Data_base()
+        conn.update_real_design(id,field,data)
+        
+    if field == "img":
+        print("changing img")
+        conn = Data_base()
+        designs = conn.get_all_real_designs()
+        route_img = list(filter(lambda design : design["id"]==id, designs))[0]["img_url"]
+        print("changing the img at ",route_img)
+        img = request.files["img"]
+        print("REMOVING")
+        os.remove(route_img)
+        print("SAVING")
+        img.save(route_img)
+        
+    if field == "dxf":
+        print("changing img")
+        conn = Data_base()
+        designs = conn.get_all_real_designs()
+        route_dxf = list(filter(lambda design : design["id"]==id, designs))[0]["dxf_url"]
+        dxf = request.files["dxf"]
+        print("REMOVING DXF")
+        os.remove(route_dxf)
+        print("SAVING DXF")
+        dxf.save(route_dxf)
+  
+    return jsonify({"msg":"updated succesfully"})    
     
 @app.route("/delete_design/<int:id>", methods=["DELETE"])
 @locked_route
@@ -242,6 +343,39 @@ def delete_design(id):
         print(e)
         return jsonify({"msg":f"An exception occurred: {e}"})
       
+@app.route("/delete_real_design/<int:id>", methods=["DELETE"])
+@locked_route
+def delete_real_design(id):
+    try:
+        print(f"DELETING real design with id: {id}")
+        conn = Data_base()
+        designs = conn.get_all_real_designs()
+        design = list(filter(lambda design : design["id"]==id, designs))[0]
+        route_dxf=design["dxf_url"]
+        route_img=design["img_url"]
+        conn.delete_real_design(id)
+        os.remove(route_dxf)
+        os.remove(route_img)
+        
+        return jsonify({"msg":"deleted succesfully"})
+    
+    except Exception as e:
+        print(e)
+        return jsonify({"msg":f"An exception occurred: {e}"})
+      
+      
+@app.route("/<string:kind>/<string:name>/<string:token>")
+# it's locked just for Ai files
+def get_file(kind,name,token):
+    route = f"{kind}/{name}"
+    if kind == "img":
+        return send_file(route, mimetype='image/png')
+    elif kind == "ai" or kind == "dxf":  
+        try:
+            if validate_tk(token): return send_file(route)
+        except:
+            return jsonify({"msg": "Unauthorized"}), 401    
+
 # ----------------------------------------------------------------------------------------
 # users & admin
 @app.route("/get_admin", methods=["POST"])
@@ -328,7 +462,7 @@ def createTk(email):
 @app.route("/test")
 @locked_route
 def validateTk():
-    return jsonify({"msg":"good"})
+    return jsonify({"msg":"token veified"})
     
     
 # ----------------------------------------------------------------------------------------
@@ -336,22 +470,16 @@ def validateTk():
 @app.route("/insert/<string:table>",methods=["POST"])
 @locked_route
 def insert(table):
-    try:
-        conn = Data_base()
-        data = request.get_json()
-        conn.create(table,data)
-        return jsonify({"msg":f"created succesfully"})
-    except Exception as e:
-        return jsonify({"msg":f"An error ocurred: {e}"})
- 
+    conn = Data_base()
+    data = request.get_json()
+    conn.create(table,data)
+    return jsonify({"msg":f"created succesfully"})
+
 @app.route("/read/<string:table>")
 @locked_route
 def read(table):
-    try:
-        conn = Data_base()
-        return jsonify(conn.read(table))
-    except Exception as e:
-        return jsonify({"msg":f"An error ocurred: {e}"})
+    conn = Data_base()
+    return jsonify(conn.read(table))
  
 @app.route("/update/<string:table>/<int:id>",methods=["PUT"])
 @locked_route
@@ -375,8 +503,6 @@ def delete(table,id):
         return jsonify({"msg":f"An error ocurred: {e}"})
  
 # ----------------------------------------------------------------------------------------
-
-
 
 
 if __name__ == "__main__":
