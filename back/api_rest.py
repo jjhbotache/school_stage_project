@@ -485,23 +485,17 @@ def read(table):
 @app.route("/update/<string:table>/<int:id>",methods=["PUT"])
 @locked_route
 def update(table,id):
-    try:
-        conn = Data_base()
-        data = request.get_json()
-        conn.update(table,data,f'id={id}')
-        return jsonify({"msg":"updated successfully"})
-    except Exception as e:
-        return jsonify({"msg":f"An error ocurred: {e}"})
+    conn = Data_base()
+    data = request.get_json()
+    conn.update(table,data,f'id={id}')
+    return jsonify({"msg":"updated successfully"})
  
 @app.route("/delete/<string:table>/<int:id>",methods=["DELETE"])
 @locked_route
 def delete(table,id):
-    try:
-        conn = Data_base()
-        conn.delete(table,f'id={id}')
-        return jsonify({"msg":"deleted successfully"})
-    except Exception as e:
-        return jsonify({"msg":f"An error ocurred: {e}"})
+    conn = Data_base()
+    conn.delete(table,f'id={id}')
+    return jsonify({"msg":"deleted successfully"})
  
 # ----------------------------------------------------------------------------------------
 
