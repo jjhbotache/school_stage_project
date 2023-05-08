@@ -10,8 +10,9 @@ importElement("templates/navbar.html")
 .then((element) => {
   const logMenu = element.querySelector(".dropdown-menu");
   if (checkLocalStorageItems(userInfoKeys)) {
+
     logMenu.innerHTML += `
-    <a class="dropdown-item" href="#">Configuraciones</a>
+    <a class="dropdown-item" href="dashboard.html">Configuraciones</a>
     <div class="dropdown-divider"></div>
     <a class="dropdown-item text-danger " id="logout">Cerrar sesión</a>
     `;

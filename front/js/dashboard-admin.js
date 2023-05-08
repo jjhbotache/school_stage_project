@@ -1,3 +1,4 @@
+import importElement from "/front/js/modules/elementImporter.js";
 import {userInfoKeys, checkLocalStorageItems, redirectNoAdmin} from '/front/js/modules/globalVars.js';
 
 
@@ -35,22 +36,41 @@ if (!localStorage.getItem("password")) {
       window.location.assign("login.html");
     })
   }
+}
 
-  // fetch("http://localhost:1000/getNumberUsers",{ 
-  //   headers:{
-  //     auth:localStorage.getItem("token")
-  //   }
-  // })
-  // .then((value) => value.json())
-  // .then((response) => {
-  //   console.log(response);
-  //   response["usernames"].forEach(name => {
-  //     info.innerHTML += name+"<br>"
-  //   });
-  // })
-  // .catch(e=>{
-  //   console.log(e);
-  //   alert("couldn't get users: ",e);
-  // })
+importElement("templates/user-info.html")
+.then((element) => {
+  const name = element.getElementById("name");
+  const id = element.getElementById("id");
+  const phone = element.getElementById("phone");
+  const email = element.getElementById("email");
+  name.innerHTML = capitalizeFirstLetter(localStorage.getItem("first_name"))+" "+capitalizeFirstLetter(localStorage.getItem("last_name"));
+  id.innerHTML = localStorage.getItem("id");
+  phone.innerHTML = localStorage.getItem("phone");
+  email.innerHTML = localStorage.getItem("email");
 
+  const spanElements = element.querySelectorAll("span");
+
+  const editUserInfo = element.getElementById("edit-user-info");
+  const saveUserInfo = element.getElementById("save-user-info");
+
+  editUserInfo.addEventListener('click', () => {
+  spanElements.forEach(span => span.contentEditable = true);
+  editUserInfo.classList.add("d-none");
+  saveUserInfo.classList.remove("d-none");
+  });
+
+  saveUserInfo.addEventListener('click', () => {
+  spanElements.forEach(span => span.contentEditable = false);
+  editUserInfo.classList.remove("d-none");
+  saveUserInfo.classList.add("d-none");
+  });
+
+
+  document.getElementById("info").appendChild(element);  
+})
+
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }

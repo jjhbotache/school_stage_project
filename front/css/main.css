@@ -6,6 +6,7 @@
 }
 body{
   background: var(--tertiary) !important;
+  min-height: 99vh;
 }
 /* --------------------- 
       manager styles

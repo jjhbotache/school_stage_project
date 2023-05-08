@@ -1,4 +1,10 @@
-function importElement(elementRoute,callback = function(){}) {
+/**
+ * 
+ * @param {*} elementRoute the route of the template
+ * @param {*} callback what it's doen with the template after been imported
+ * @returns 
+ */
+function importElement(elementRoute) {
   let element;
   return new Promise((resolve, reject) => {
     fetch(elementRoute)

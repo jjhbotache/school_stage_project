@@ -370,7 +370,8 @@ def get_file(kind,name,token):
     route = f"{kind}/{name}"
     if kind == "img":
         return send_file(route, mimetype='image/png')
-    elif kind == "ai" or kind == "dxf":  
+    elif     kind == "ai"\
+        or   kind == "dxf":  
         try:
             if validate_tk(token): return send_file(route)
         except:

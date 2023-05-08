@@ -205,7 +205,7 @@ function saveDesign(name,filesName,img,dxf) {
   ).then(response=>response.text())
   .then(data=>{
     alert(data);
-    // window.location.reload();
+    window.location.reload();
   })
   .catch((error) => {
     console.log(error);

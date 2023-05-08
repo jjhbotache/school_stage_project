@@ -17,6 +17,7 @@ importElement("templates/manager.html")
   
   element.getElementById("manager-title").textContent = "Wine manager";
   element.getElementById("read-window").querySelector("label").textContent = "Wine kinds";
+  element.getElementById("read-window").querySelector("select").id="wine-kinds-viewer";
   loadWines(element.getElementById("read-window").querySelector("select"));
   inputWine = element.getElementById("input-manager");
   btnAdd = element.getElementById("btn-add");
