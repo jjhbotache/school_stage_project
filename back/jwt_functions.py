@@ -11,8 +11,7 @@ def create_tk(data:dict):
   
 def validate_tk(token):
   try:
-    decode(token,password,("HS256"))
-    return True
+    return decode(token,password,("HS256"))
   except Exception as e:
     print(token)
     print(e)

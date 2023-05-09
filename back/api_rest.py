@@ -6,6 +6,10 @@ from flask_cors import CORS
 from send_mail import *
 from jwt_functions import *
 from functools import wraps
+import random
+import csv
+import sqlite3
+
 
 
 #------------
@@ -445,7 +449,7 @@ def add_user():
     except Exception as e:
         return jsonify({"msg":f"An exception occurred: {e}"})
   
-#==============
+#============== security
 
 @app.route("/verify/<string:email>",methods=["POST"])
 def createTk(email):
@@ -464,6 +468,50 @@ def createTk(email):
 @locked_route
 def validateTk():
     return jsonify({"msg":"token veified"})
+    
+@app.route("/verify-user/<string:email>")
+def createUserTk(email):
+    # create a random code of 4 digits
+    code = random.randint(1000,9999)
+    # send the code to the email
+    send_mail(email,str(code),f"ur code is: {code}")
+
+
+
+    conn = Data_base()
+    id = conn.read("users",["id"],f"email = '{email}'")[0]
+    print(id)
+    # connect with a sqlite3 db
+    conn = sqlite3.connect('codes.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS codes
+                    (id text, code text)''')
+    # insert in codes table a register
+    c.execute(f"INSERT INTO codes VALUES ('{id[0]}','{code}')")
+    conn.commit()
+    conn.close()
+    
+    
+    
+    
+    
+    
+    return jsonify({"msg":"email sended"})
+    
+@app.route("/test-user/<string:code>")
+def validateUser(code):
+    # connect to codes  sqlite3 database
+    conn = sqlite3.connect('codes.db')
+    c = conn.cursor()
+    # get the id of the user
+    id = c.execute(f"SELECT id FROM codes WHERE code = '{code}'").fetchall()[0][0]
+    # delete the register
+    c.execute(f"DELETE FROM codes WHERE id = '{id}'")
+    conn.commit()
+    conn.close()
+    # create a token with the id
+    token_obj = create_tk({"id":id})
+    return jsonify({"userTk":token_obj})
     
     
 # ----------------------------------------------------------------------------------------
