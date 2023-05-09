@@ -23,6 +23,20 @@ def locked_route(func):
             raise Exception
     return wrapper
 
+# locker decorator for users
+def locked_route_for_anyone(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        conn = Data_base()
+        userList = [row[0] for row in  conn.read("users",["id"])]
+        token = request.headers["auth"]
+        isValid = validate_user_tk(token,userList)
+        if isValid:
+            return func(*args, **kwargs)
+        else:
+            raise Exception
+    return wrapper
+
 #------------
 
 app = Flask(__name__)
@@ -471,28 +485,30 @@ def validateTk():
     
 @app.route("/verify-user/<string:email>")
 def createUserTk(email):
+    # get the id from the email
+    conn = Data_base()
+    id = conn.read("users",["id"],f"email = '{email}'")[0][0]
+    print(id)
+    
     # create a random code of 4 digits
     code = random.randint(1000,9999)
+    conn = sqlite3.connect('codes.db');c = conn.cursor();c.execute(f"INSERT INTO codes VALUES ('{id}','{code}')");conn.commit();conn.close()
+    
     # send the code to the email
     send_mail(email,str(code),f"ur code is: {code}")
+
 
 
 
     conn = Data_base()
     id = conn.read("users",["id"],f"email = '{email}'")[0][0]
     print(id)
+    
+
+    conn = Data_base()
+    id = conn.read("users",["id"],f"email = '{email}'")[0][0]
+    print(id)
     # connect with a sqlite3 db
-    conn = sqlite3.connect('codes.db')
-    c = conn.cursor()
-    # insert in codes table a register
-    c.execute(f"INSERT INTO codes VALUES ('{id}','{code}')")
-    conn.commit()
-    conn.close()
-    
-    
-    
-    
-    
     
     return jsonify({"msg":"email sended"})
     
@@ -515,6 +531,10 @@ def validateUser(code):
     token_obj = create_tk({"id":id})
     return jsonify({"userTk":token_obj})
     
+@app.route("/user-hi/<string:msg>")
+@locked_route_for_anyone
+def test(msg):
+    return jsonify({"msg":msg})
     
 # ----------------------------------------------------------------------------------------
 # general managment
