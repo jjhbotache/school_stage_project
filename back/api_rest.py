@@ -479,15 +479,13 @@ def createUserTk(email):
 
 
     conn = Data_base()
-    id = conn.read("users",["id"],f"email = '{email}'")[0]
+    id = conn.read("users",["id"],f"email = '{email}'")[0][0]
     print(id)
     # connect with a sqlite3 db
     conn = sqlite3.connect('codes.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS codes
-                    (id text, code text)''')
     # insert in codes table a register
-    c.execute(f"INSERT INTO codes VALUES ('{id[0]}','{code}')")
+    c.execute(f"INSERT INTO codes VALUES ('{id}','{code}')")
     conn.commit()
     conn.close()
     
@@ -504,7 +502,11 @@ def validateUser(code):
     conn = sqlite3.connect('codes.db')
     c = conn.cursor()
     # get the id of the user
+    print(code)
     id = c.execute(f"SELECT id FROM codes WHERE code = '{code}'").fetchall()[0][0]
+    print(id)
+    # return jsonify({"msg":"email sended"})
+    
     # delete the register
     c.execute(f"DELETE FROM codes WHERE id = '{id}'")
     conn.commit()
