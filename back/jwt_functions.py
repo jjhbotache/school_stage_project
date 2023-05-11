@@ -20,10 +20,9 @@ def validate_tk(token):
 def validate_user_tk(token,user_ids_list:list):
   try:
     data = decode(token,password,("HS256"))
-    print("hola")
     print(user_ids_list)
     if int(data["id"]) in user_ids_list:
-      return True
+      return data
     else:
       return False
     # return True

@@ -10,7 +10,6 @@ if (!localStorage.getItem("password")) {
   window.location.assign("dashboard.html"); 
 }else{
   if (!localStorage.getItem("token")) {
-    debugger;
     let password =  prompt("Introduzca su contraseña de admin :D");
     fetch(`http://localhost:1000/verify/${localStorage.getItem("id")}`,
     {

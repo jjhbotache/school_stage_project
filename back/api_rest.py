@@ -199,6 +199,7 @@ class Data_base:
         return result
 
     def update(self, table, data, where):
+        # print(data)
         columns = list(data.keys())
         assert len(columns)==1
         query = f"UPDATE {table} SET {columns[0]} = {data[columns[0]]} WHERE {where}"
@@ -381,6 +382,61 @@ def delete_real_design(id):
         print(e)
         return jsonify({"msg":f"An exception occurred: {e}"})
       
+@app.route("/create/pucharse_orders", methods=["POST"])
+@locked_route
+def create_pucharse_orders():
+    conn = Data_base()
+    
+    user_id = request.form["user-id"]
+    wine_id = request.form["wine-id"]
+    real_design_id = request.form["real-design-id"]
+    amount = request.form["amount"]
+    msg = request.form["msg"]
+    primary_color_id = request.form["primary-color-id"]
+    secondary_color_id = request.form["secondary-color-id"]
+    delivery_date = request.form["delivery-date"]
+    address = request.form["address"]
+    # vaucher = request.files.get("vaucher")
+    truly_paid = request.form["truly-paid"]
+    # return jsonify({"msg":"toy bien"})
+    try:
+        conn.cursor.execute(f"""
+        INSERT INTO pucharse_orders(
+        id_user,
+        id_wine,
+        id_real_design,
+        msg,
+        id_packing_color,
+        id_secondary_packing_color,
+        delivery_date,
+        id_delivery_place,
+        id_vaucher,
+        amount,
+        paid
+        )
+        VALUES(
+        {user_id},
+        {wine_id},
+        {real_design_id},
+        "{msg}",
+        {primary_color_id},
+        {secondary_color_id},
+        "{delivery_date}",
+        "{address}",
+        "vaucher",
+        {amount},
+        {truly_paid}
+        );
+        """)
+        conn.connection.commit()
+        # Save the image file to the server
+        # vaucher.save(os.path.join(app.config["UPLOAD_FOLDER"], vaucher.filename))
+        return jsonify({"msg":"Created successfully"})
+    except Exception as e:
+        print(e)
+        conn.connection.rollback()
+    return "Error while creating the order", 500
+    
       
 @app.route("/<string:kind>/<string:name>/<string:token>")
 # it's locked just for Ai files
@@ -465,45 +521,40 @@ def add_user():
   
 #============== security
 
-@app.route("/verify/<string:email>",methods=["POST"])
-def createTk(email):
+@app.route("/verify/<string:id>",methods=["POST"])
+def createTk(id):
     conn = Data_base()
     password = request.get_json()["password"]
-    if password == (conn.read("users",["password"],f"email = '{email}' ")[0][0]):
+    print(password)
+    print("id: ",id)
+    if password == (conn.read("users",["password"],f"id = {id} ")[0][0]):
         
         token_obj = create_tk({"password":password})
         print(token_obj)
         print(type(token_obj))
         return jsonify({"tk":token_obj})
     else:
-        return jsonify({"msg":"no exists"})
+        raise Exception
+        # return jsonify({"msg":"no exists"})
     
 @app.route("/test")
 @locked_route
 def validateTk():
     return jsonify({"msg":"token veified"})
     
-@app.route("/verify-user/<string:email>")
-def createUserTk(email):
-    # get the id from the email
-    conn = Data_base()
-    id = conn.read("users",["id"],f"email = '{email}'")[0][0]
-    print(id)
-    
-    # create a random code of 4 digits
+@app.route("/verify-user/<string:email>/<string:id>")
+def send_user_code(email,id):
+
+    # create a random code of 4 digits and save
     code = random.randint(1000,9999)
     conn = sqlite3.connect('codes.db');c = conn.cursor();c.execute(f"INSERT INTO codes VALUES ('{id}','{code}')");conn.commit();conn.close()
     
     # send the code to the email
     send_mail(email,str(code),f"ur code is: {code}")
 
-
-
-
     conn = Data_base()
     id = conn.read("users",["id"],f"email = '{email}'")[0][0]
     print(id)
-    
 
     conn = Data_base()
     id = conn.read("users",["id"],f"email = '{email}'")[0][0]
@@ -512,16 +563,16 @@ def createUserTk(email):
     
     return jsonify({"msg":"email sended"})
     
-@app.route("/test-user/<string:code>")
-def validateUser(code):
+@app.route("/test-user/<string:code>/<string:id>")
+def validateUser(code,id):
     # connect to codes  sqlite3 database
     conn = sqlite3.connect('codes.db')
     c = conn.cursor()
     # get the id of the user
-    print(code)
-    id = c.execute(f"SELECT id FROM codes WHERE code = '{code}'").fetchall()[0][0]
-    print(id)
-    # return jsonify({"msg":"email sended"})
+    print("code recived: ",code)
+    gotten_id = c.execute(f"SELECT id FROM codes WHERE code = '{code}'").fetchall()[0][0]
+    print(gotten_id)
+    if id != gotten_id : raise Exception
     
     # delete the register
     c.execute(f"DELETE FROM codes WHERE id = '{id}'")
@@ -529,13 +580,29 @@ def validateUser(code):
     conn.close()
     # create a token with the id
     token_obj = create_tk({"id":id})
-    return jsonify({"userTk":token_obj})
+    print("im giving the tk: ",token_obj)
+    return jsonify({"token":token_obj})
     
-@app.route("/user-hi/<string:msg>")
+# ----------------------------------------------------------------------------------------
+# routes for users
+# make a route that update a row
+@app.route("/user/update",methods=["PUT"])
 @locked_route_for_anyone
-def test(msg):
-    return jsonify({"msg":msg})
-    
+def update_user():
+    id = decode(request.headers["auth"],password,("HS256"))["id"]
+    conn = Data_base()
+    data = request.get_json()
+    # get the key the values
+    if not "email" in data:
+        conn.update("users",data,f'id={id}')
+    else:
+        print(data)
+        id2 = decode(data["newEmailToken"],password,("HS256"))["id"]
+        del data["newEmailToken"]
+        print("id2: ",id2)
+        conn.update("users",data,f'id={id2}')
+    return jsonify({"msg":"updated successfully"})
+
 # ----------------------------------------------------------------------------------------
 # general managment
 @app.route("/insert/<string:table>",methods=["POST"])
