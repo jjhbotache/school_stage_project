@@ -1,4 +1,4 @@
-import {userInfoKeys,checkLocalStorageItems} from '/front/js/modules/globalVars.js';
+import {userInfoKeys,checkLocalStorageItems} from './modules/globalVars.js';
 const loginForm = document.getElementById("login");
 const registerForm = document.getElementById("register");
 const title = document.getElementById("title");

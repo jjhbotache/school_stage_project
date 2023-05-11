@@ -1,6 +1,6 @@
+import { apiRoute } from "./modules/globalVars";
 const designsContainer = document.getElementById("designs-container");
 const spinner = document.getElementById("designs-spinner");
-const apiRoute = "http://127.0.0.1:1000/";
 
 const DesignTemplate = document.getElementById("design-template").content;
 

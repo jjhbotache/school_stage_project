@@ -1,6 +1,6 @@
-import importElement from "/front/js/modules/elementImporter.js";
-import {userInfoKeys, checkLocalStorageItems, redirectNoAdmin} from '/front/js/modules/globalVars.js';
-
+import importElement from "./modules/elementImporter.js";
+import {userInfoKeys, checkLocalStorageItems, apiRoute} from './modules/globalVars.js';
+import {setRequestConfig} from './modules/globalVars.js';
 
 
 if (!checkLocalStorageItems(userInfoKeys)) {
@@ -10,8 +10,9 @@ if (!localStorage.getItem("password")) {
   window.location.assign("dashboard.html"); 
 }else{
   if (!localStorage.getItem("token")) {
-    let password =  prompt("Introduzca su contraseña de admin");
-    fetch(`http://localhost:1000/verify/${localStorage.getItem("email")}`,
+    debugger;
+    let password =  prompt("Introduzca su contraseña de admin :D");
+    fetch(`http://localhost:1000/verify/${localStorage.getItem("id")}`,
     {
       method: 'POST',
       headers: {
@@ -40,16 +41,18 @@ if (!localStorage.getItem("password")) {
 
 importElement("templates/user-info.html")
 .then((element) => {
-  const name = element.getElementById("name");
+  const firstName = element.getElementById("first-name");
+  const lastName = element.getElementById("last-name");
   const id = element.getElementById("id");
   const phone = element.getElementById("phone");
   const email = element.getElementById("email");
-  name.innerHTML = capitalizeFirstLetter(localStorage.getItem("first_name"))+" "+capitalizeFirstLetter(localStorage.getItem("last_name"));
+  firstName.innerHTML = localStorage.getItem("first_name");
+  lastName.innerHTML = localStorage.getItem("last_name");
   id.innerHTML = localStorage.getItem("id");
   phone.innerHTML = localStorage.getItem("phone");
   email.innerHTML = localStorage.getItem("email");
 
-  const spanElements = element.querySelectorAll("span");
+  const spanElements = element.querySelectorAll("span:not([id='id'])");
 
   const editUserInfo = element.getElementById("edit-user-info");
   const saveUserInfo = element.getElementById("save-user-info");
@@ -60,8 +63,76 @@ importElement("templates/user-info.html")
   saveUserInfo.classList.remove("d-none");
   });
 
-  saveUserInfo.addEventListener('click', () => {
+  saveUserInfo.addEventListener('click', async() => {
   spanElements.forEach(span => span.contentEditable = false);
+
+  if (
+    (
+      firstName.textContent!=localStorage.getItem("first_name")||
+      firstName.textContent!=localStorage.getItem("last_name") ||
+      phone.textContent!=localStorage.getItem("phone") ||
+      email.textContent!=localStorage.getItem("email")
+    )&&confirm("save changes?")) {
+      const thingsToChange =[];
+
+      if (firstName.textContent!=localStorage.getItem("first_name")) {
+        console.log("changing name");
+        thingsToChange.push({first_name: "'"+firstName.textContent+"'"})
+      }
+      if (lastName.textContent!=localStorage.getItem("last_name")) {
+        console.log("changing last");
+        thingsToChange.push({last_name: "'"+lastName.textContent+"'"})
+      }
+      if (phone.textContent!=localStorage.getItem("phone")) {
+        const regex = /^\d{10}$/;
+        const isValid = regex.test(phone.textContent);
+        if (isValid) {
+          console.log("changing phone");
+          thingsToChange.push({phone: phone.textContent})
+        }else{
+          phone.textContent = localStorage.getItem("phone");
+          alert("unvalid phone");
+          location.reload();
+        }
+      }
+      if (email.textContent!=localStorage.getItem("email")) {
+        const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        const isValid = re.test(email.textContent);
+        if (isValid) {
+          console.log("changing email");
+          thingsToChange.push({email: "'"+email.textContent+"'"})
+        }else{
+          email.textContent = localStorage.getItem("email");
+          alert("unvalid email");
+          location.reload();
+
+        }
+      }
+
+      console.log(thingsToChange);
+      thingsToChange.forEach(obj => {
+        fetch(
+          apiRoute+"update/users/"+localStorage.getItem("id"),
+          setRequestConfig("PUT",JSON.stringify(obj))
+        )
+        .then((json) => json.json())
+        .then((response) => {
+          localStorage.clear()
+          window.location.assign("login.html")
+        })
+        .catch((error) =>console.log(error))
+        
+      });
+
+  }else{
+    firstName = localStorage.getItem("fist_name");
+    lastName = localStorage.getItem("last_name");
+    phone.textContent = localStorage.getItem("phone");
+    email.textContent = localStorage.getItem("email");
+  }
+
+
+
   editUserInfo.classList.remove("d-none");
   saveUserInfo.classList.add("d-none");
   });

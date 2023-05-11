@@ -1,5 +1,6 @@
-import importElement from "/front/js/modules/elementImporter.js";
-import {userInfoKeys,checkLocalStorageItems} from '/front/js/modules/globalVars.js';
+import importElement from "./modules/elementImporter.js";
+import {userInfoKeys,checkLocalStorageItems} from './modules/globalVars.js';
+
 
 function logout() {
   localStorage.clear();

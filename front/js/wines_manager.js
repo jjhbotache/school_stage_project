@@ -1,4 +1,4 @@
-import importElement from "/front/js/modules/elementImporter.js";
+import importElement from "./modules/elementImporter.js";
 import { redirectNoAdmin } from "./modules/globalVars.js";
 import { setRequestConfig } from "./modules/globalVars.js";
 
